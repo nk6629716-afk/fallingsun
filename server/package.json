@@ -9,7 +9,8 @@
     "start": "node dist/server/src/index.js",
     "test": "tsx --test tests/*.test.ts",
     "test:all": "tsx --test tests/*.test.ts",
-    "seed": "tsx src/db/seedRunner.ts"
+    "seed": "tsx src/db/seedRunner.ts",
+    "provision:demo": "tsx src/scripts/provisionDemoOfficial.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",

@@ -142,8 +142,61 @@ authRouter.post('/signup', async (req: AuthenticatedRequest, res: Response) => {
 /**
  * POST /api/auth/login
  */
+export const DEMO_OFFICIAL_EMAIL = 'demo.official@sentinel-demo.local';
+export const DEMO_OFFICIAL_PASSWORD = process.env.DEMO_OFFICIAL_PASSWORD || 'Sentinel#DemoOfficial2026!Local';
+
 authRouter.post('/login', async (req: AuthenticatedRequest, res: Response) => {
   const { email, password, demoRole } = req.body;
+
+  // Demo Official Account Login (strictly isolated to development / testing)
+  if (email === DEMO_OFFICIAL_EMAIL) {
+    if (!config.enableDemoAuth || config.nodeEnv === 'production') {
+      res.status(403).json({
+        success: false,
+        error: {
+          code: 'DEMO_MODE_DISABLED',
+          message: 'Demo credentials are not permitted in production environments.',
+        },
+      });
+      return;
+    }
+
+    if (password !== DEMO_OFFICIAL_PASSWORD) {
+      res.status(401).json({
+        success: false,
+        error: {
+          code: 'INVALID_CREDENTIALS',
+          message: 'Invalid password for Demo Official Account.',
+        },
+      });
+      return;
+    }
+
+    const reg = db.getRegistrationByEmail(DEMO_OFFICIAL_EMAIL);
+    const user: UserProfile = {
+      id: reg?.authUserId || 'usr-demo-official-01',
+      email: DEMO_OFFICIAL_EMAIL,
+      role: 'operations_officer',
+      approvalStatus: 'approved',
+      soldierId: reg?.soldierId || 'SOL-002',
+      badgeName: reg?.badgeName || 'Demo Official',
+      regimentNo: reg?.regimentNo || '042',
+      callsign: 'OFFICIAL-DEMO',
+      unit: 'Sentinel Demonstration Element',
+      isDemo: true,
+    };
+
+    res.status(200).json({
+      success: true,
+      data: {
+        token: 'dev-demo-official-token',
+        user,
+        isDemo: true,
+        notice: 'DEMO ACCOUNT — NOT FOR OPERATIONAL USE',
+      },
+    });
+    return;
+  }
 
   // 1. Real Supabase Authentication
   if (isSupabaseConfigured() && email && password) {

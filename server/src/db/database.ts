@@ -148,6 +148,24 @@ export class Database {
         reviewedBy: 'SYSTEM_BOOTSTRAP',
         decisionReason: 'Initial administrative bootstrap',
       },
+      'reg-demo-official': {
+        id: 'reg-demo-official',
+        authUserId: 'usr-demo-official-01',
+        email: 'demo.official@sentinel-demo.local',
+        role: 'operations_officer',
+        approvalStatus: 'approved',
+        soldierId: 'SOL-002',
+        badgeName: 'Demo Official',
+        regimentNo: '042',
+        heightCm: 178,
+        weightKg: 76,
+        ageYears: 34,
+        profileRecordedAt: '2026-10-26T00:00:00.000Z',
+        submittedAt: '2026-10-26T00:00:00.000Z',
+        reviewedAt: '2026-10-26T00:00:00.000Z',
+        reviewedBy: 'TRUSTED_PROVISIONING_SETUP',
+        decisionReason: 'Provisioned demo official account for login verification',
+      },
     };
 
     const decisionAudits: Record<string, RegistrationDecisionAudit> = {};
@@ -236,6 +254,12 @@ export class Database {
           const defaultState = this.getDefaultState();
           parsed.registrations = defaultState.registrations;
           needsSave = true;
+        } else if (!parsed.registrations['reg-demo-official']) {
+          const defaultState = this.getDefaultState();
+          if (defaultState.registrations['reg-demo-official']) {
+            parsed.registrations['reg-demo-official'] = defaultState.registrations['reg-demo-official'];
+            needsSave = true;
+          }
         }
         if (!parsed.decisionAudits) {
           parsed.decisionAudits = {};

@@ -36,6 +36,18 @@ export const DEMO_USERS: Record<string, UserProfile> = {
     soldierId: 'SOL-102',
     isDemo: true,
   },
+  'dev-demo-official-token': {
+    id: 'usr-demo-official-01',
+    email: 'demo.official@sentinel-demo.local',
+    role: 'operations_officer',
+    callsign: 'OFFICIAL-DEMO',
+    unit: 'Sentinel Demonstration Element',
+    approvalStatus: 'approved',
+    soldierId: 'SOL-002',
+    badgeName: 'Demo Official',
+    regimentNo: '042',
+    isDemo: true,
+  },
   'dev-medical-token': {
     id: 'usr-med-03',
     email: 'medical@sentinel.mil',
