@@ -218,9 +218,9 @@ ON CONFLICT (id) DO NOTHING;
 -- Seed Soldier Vitals
 INSERT INTO public.sentinel_soldier_vitals (id, soldier_id, callsign, unit, timestamp, heart_rate_bpm, blood_pressure_systolic, blood_pressure_diastolic, temperature_celsius, oxygen_saturation_pct, respiratory_rate_bpm, clinical_notes, recorded_by)
 VALUES
-    ('REC-001-1', 'SOL-001', 'SOL-001 (Aarav)', '1st Recon Team (CCP Delta)', '2026-10-25T08:10:58.000Z', 136, 88, 54, 37.8, 88, 34, 'Critical hypoxemia (SpO2 88%) and tachypnea (RR 34/min) following blast trauma. Immediate airway management required.', 'med_officer_1@sentinel.mil'),
-    ('REC-002-1', 'SOL-002', 'SOL-002 (Aditi)', '2nd Infantry Patrol (CCP Delta)', '2026-10-25T08:05:00.000Z', 86, 122, 78, 36.9, 96, 20, 'Compound lower leg fracture splinted on site; pain managed with analgesics. Respiration stable.', 'med_officer_1@sentinel.mil'),
-    ('REC-003-1', 'SOL-003', 'SOL-003 (Dev)', 'Combat Support Medevac (Aid Station Bravo)', '2026-10-25T07:55:00.000Z', 74, 118, 76, 36.7, 99, 16, 'Superficial shrapnel cuts bandaged. Ambulatory walking wounded; stable.', 'med_officer_2@sentinel.mil')
+    ('REC-001-1', 'SOL-001', 'SOL-001 (Viper - Aarav)', '1st Recon Team (CCP Delta)', '2026-10-25T08:10:58.000Z', 136, 88, 54, 37.8, 88, 34, 'Critical hypoxemia (SpO2 88%) and tachypnea (RR 34/min) following blast trauma. Immediate airway management required.', 'med_officer_1@sentinel.mil'),
+    ('REC-002-1', 'SOL-002', 'SOL-002 (Ghost - Aditi)', '2nd Infantry Patrol (CCP Delta)', '2026-10-25T08:05:00.000Z', 86, 122, 78, 36.9, 96, 20, 'Compound lower leg fracture splinted on site; pain managed with analgesics. Respiration stable.', 'med_officer_1@sentinel.mil'),
+    ('REC-003-1', 'SOL-003', 'SOL-003 (Echo - Dev)', 'Combat Support Medevac (Aid Station Bravo)', '2026-10-25T07:55:00.000Z', 74, 118, 76, 36.7, 99, 16, 'Superficial shrapnel cuts bandaged. Ambulatory walking wounded; stable.', 'med_officer_2@sentinel.mil')
 ON CONFLICT (id) DO NOTHING;
 
 -- Seed Road Graph Nodes & Edges via comment for reference

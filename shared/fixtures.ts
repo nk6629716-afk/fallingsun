@@ -442,23 +442,23 @@ export const INITIAL_HAZARDS: RoadHazardEdge[] = [
 // 7. Initial Soldiers & Historical Vitals (Simulated Baseline)
 // --------------------------------------------------------------------------
 export const INITIAL_SOLDIERS: SoldierProfile[] = [
-  { id: 'SOL-001', callsign: 'SOL-001 (Aarav)', unit: '1st Recon Team (CCP Delta)', status: 'active' },
-  { id: 'SOL-002', callsign: 'SOL-002 (Aditi)', unit: '2nd Infantry Patrol (CCP Delta)', status: 'active' },
-  { id: 'SOL-003', callsign: 'SOL-003 (Dev)', unit: 'Combat Support Medevac (Aid Station Bravo)', status: 'active' },
-  { id: 'SOL-004', callsign: 'SOL-004 (Diya)', unit: 'Heavy Mobility Detachment (River Road)', status: 'in_transit' },
-  { id: 'SOL-005', callsign: 'SOL-005 (Meera)', unit: 'Forward Perimeter Unit (Jct 101/110)', status: 'standby' },
-  { id: 'SOL-006', callsign: 'SOL-006 (Myra)', unit: '1st Recon Team (Forward Post Alpha)', status: 'active' },
-  { id: 'SOL-007', callsign: 'SOL-007 (Neil)', unit: '2nd Infantry Patrol (Aid Station Bravo)', status: 'active' },
-  { id: 'SOL-008', callsign: 'SOL-008 (Pooja)', unit: 'Combat Support Medevac (Aid Station Bravo)', status: 'standby' },
-  { id: 'SOL-009', callsign: 'SOL-009 (Priya)', unit: 'Heavy Mobility Detachment (River Road)', status: 'in_transit' },
-  { id: 'SOL-010', callsign: 'SOL-010 (Rahul)', unit: 'Forward Perimeter Unit (Jct 101/110)', status: 'active' },
+  { id: 'SOL-001', callsign: 'SOL-001 (Viper - Aarav)', unit: '1st Recon Team (CCP Delta)', status: 'active' },
+  { id: 'SOL-002', callsign: 'SOL-002 (Ghost - Aditi)', unit: '2nd Infantry Patrol (CCP Delta)', status: 'active' },
+  { id: 'SOL-003', callsign: 'SOL-003 (Echo - Dev)', unit: 'Combat Support Medevac (Aid Station Bravo)', status: 'active' },
+  { id: 'SOL-004', callsign: 'SOL-004 (Titan - Diya)', unit: 'Heavy Mobility Detachment (River Road)', status: 'in_transit' },
+  { id: 'SOL-005', callsign: 'SOL-005 (Sentry - Meera)', unit: 'Forward Perimeter Unit (Jct 101/110)', status: 'standby' },
+  { id: 'SOL-006', callsign: 'SOL-006 (Falcon - Myra)', unit: '1st Recon Team (Forward Post Alpha)', status: 'active' },
+  { id: 'SOL-007', callsign: 'SOL-007 (Hawk - Neil)', unit: '2nd Infantry Patrol (Aid Station Bravo)', status: 'active' },
+  { id: 'SOL-008', callsign: 'SOL-008 (Saber - Pooja)', unit: 'Combat Support Medevac (Aid Station Bravo)', status: 'standby' },
+  { id: 'SOL-009', callsign: 'SOL-009 (Phantom - Priya)', unit: 'Heavy Mobility Detachment (River Road)', status: 'in_transit' },
+  { id: 'SOL-010', callsign: 'SOL-010 (Striker - Rahul)', unit: 'Forward Perimeter Unit (Jct 101/110)', status: 'active' },
 ];
 
 export const INITIAL_SOLDIER_VITALS: SoldierVitalsRecord[] = [
   {
     id: 'REC-001-1',
     soldierId: 'SOL-001',
-    callsign: 'SOL-001 (Aarav)',
+    callsign: 'SOL-001 (Viper - Aarav)',
     unit: '1st Recon Team (CCP Delta)',
     timestamp: '2026-10-25T08:10:58.000Z',
     heartRateBpm: 136,
@@ -476,7 +476,7 @@ export const INITIAL_SOLDIER_VITALS: SoldierVitalsRecord[] = [
   {
     id: 'REC-002-1',
     soldierId: 'SOL-002',
-    callsign: 'SOL-002 (Aditi)',
+    callsign: 'SOL-002 (Ghost - Aditi)',
     unit: '2nd Infantry Patrol (CCP Delta)',
     timestamp: '2026-10-25T08:05:00.000Z',
     heartRateBpm: 86,
@@ -494,7 +494,7 @@ export const INITIAL_SOLDIER_VITALS: SoldierVitalsRecord[] = [
   {
     id: 'REC-003-1',
     soldierId: 'SOL-003',
-    callsign: 'SOL-003 (Dev)',
+    callsign: 'SOL-003 (Echo - Dev)',
     unit: 'Combat Support Medevac (Aid Station Bravo)',
     timestamp: '2026-10-25T07:55:00.000Z',
     heartRateBpm: 74,
@@ -512,7 +512,7 @@ export const INITIAL_SOLDIER_VITALS: SoldierVitalsRecord[] = [
   {
     id: 'REC-004-1',
     soldierId: 'SOL-004',
-    callsign: 'SOL-004 (Diya)',
+    callsign: 'SOL-004 (Titan - Diya)',
     unit: 'Heavy Mobility Detachment (River Road)',
     timestamp: '2026-10-25T08:12:00.000Z',
     heartRateBpm: 142,
@@ -530,7 +530,7 @@ export const INITIAL_SOLDIER_VITALS: SoldierVitalsRecord[] = [
   {
     id: 'REC-005-1',
     soldierId: 'SOL-005',
-    callsign: 'SOL-005 (Meera)',
+    callsign: 'SOL-005 (Sentry - Meera)',
     unit: 'Forward Perimeter Unit (Jct 101/110)',
     timestamp: '2026-10-25T08:08:00.000Z',
     heartRateBpm: 98,
@@ -548,7 +548,7 @@ export const INITIAL_SOLDIER_VITALS: SoldierVitalsRecord[] = [
   {
     id: 'REC-006-1',
     soldierId: 'SOL-006',
-    callsign: 'SOL-006 (Myra)',
+    callsign: 'SOL-006 (Falcon - Myra)',
     unit: '1st Recon Team (Forward Post Alpha)',
     timestamp: '2026-10-25T08:00:00.000Z',
     heartRateBpm: 78,
@@ -566,7 +566,7 @@ export const INITIAL_SOLDIER_VITALS: SoldierVitalsRecord[] = [
   {
     id: 'REC-007-1',
     soldierId: 'SOL-007',
-    callsign: 'SOL-007 (Neil)',
+    callsign: 'SOL-007 (Hawk - Neil)',
     unit: '2nd Infantry Patrol (Aid Station Bravo)',
     timestamp: '2026-10-25T08:14:00.000Z',
     heartRateBpm: 130,
@@ -584,7 +584,7 @@ export const INITIAL_SOLDIER_VITALS: SoldierVitalsRecord[] = [
   {
     id: 'REC-008-1',
     soldierId: 'SOL-008',
-    callsign: 'SOL-008 (Pooja)',
+    callsign: 'SOL-008 (Saber - Pooja)',
     unit: 'Combat Support Medevac (Aid Station Bravo)',
     timestamp: '2026-10-25T08:02:00.000Z',
     heartRateBpm: 92,
@@ -602,7 +602,7 @@ export const INITIAL_SOLDIER_VITALS: SoldierVitalsRecord[] = [
   {
     id: 'REC-009-1',
     soldierId: 'SOL-009',
-    callsign: 'SOL-009 (Priya)',
+    callsign: 'SOL-009 (Phantom - Priya)',
     unit: 'Heavy Mobility Detachment (River Road)',
     timestamp: '2026-10-25T07:50:00.000Z',
     heartRateBpm: 72,
@@ -620,7 +620,7 @@ export const INITIAL_SOLDIER_VITALS: SoldierVitalsRecord[] = [
   {
     id: 'REC-010-1',
     soldierId: 'SOL-010',
-    callsign: 'SOL-010 (Rahul)',
+    callsign: 'SOL-010 (Striker - Rahul)',
     unit: 'Forward Perimeter Unit (Jct 101/110)',
     timestamp: '2026-10-25T08:06:00.000Z',
     heartRateBpm: 90,
