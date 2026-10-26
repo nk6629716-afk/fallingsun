@@ -5,7 +5,6 @@ import {
   RotateCcw,
   Menu,
   MoreVertical,
-  Cpu,
 } from 'lucide-react';
 import { getLiveIST } from '../utils/time';
 import { createWavefrontRipple } from '../utils/motion';
@@ -55,7 +54,6 @@ export const CommandHeader: React.FC<CommandHeaderProps> = ({
   onToggleHeaderMinimized,
   realtimeStatus = 'disconnected',
   lastEventTimestamp = null,
-  onSimulateSlowLoad,
 }) => {
   const [istTime, setIstTime] = useState<string>(() => getLiveIST());
 
@@ -229,28 +227,6 @@ export const CommandHeader: React.FC<CommandHeaderProps> = ({
 
         {/* Desktop-only action controls */}
         <div className="header-actions-desktop" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-          {/* Simulate Fallback Skeleton Wireframe (2.0s) */}
-          {onSimulateSlowLoad && (
-            <button
-              type="button"
-              className="btn-tactical"
-              onClick={(e) => {
-                createWavefrontRipple(e);
-                onSimulateSlowLoad();
-              }}
-              style={{
-                padding: '4px 10px',
-                fontSize: '0.68rem',
-                borderColor: 'rgba(97, 115, 37, 0.40)',
-                color: 'var(--accent-sage, #738a65)',
-              }}
-              title="Test tactical skeleton wireframe state (2.0s duration with 240ms reveal handshake)"
-            >
-              <Cpu size={12} />
-              <span>WIREFRAME</span>
-            </button>
-          )}
-
           {/* Go Offline / Offline Mode Button */}
           <button
             type="button"
