@@ -1,5 +1,5 @@
 # SENTINEL Project Report & System Architecture Ledger
-*Automated Operational & Technical Dossier — Generated 2026-10-26T11:45:20.903Z*
+*Automated Operational & Technical Dossier — Generated 2026-10-26T11:55:23.657Z*
 
 ---
 
@@ -18,12 +18,12 @@ The platform provides resilient disaster-zone situational awareness for military
 | Metric | Active Repository Value |
 | :--- | :--- |
 | **Active Branch** | `main` |
-| **Commit SHA** | `0985329bef1286b3fcab5806f879eb1cacf99efe` (`0985329`) |
-| **Last Commit Date** | `2026-10-26 17:12:21 +0530` |
-| **Author** | `Vineet <vineet00955@gmail.com>` |
+| **Commit SHA** | `d41d9d63ceaacbf412bed5358f7c66e28deff91a` (`d41d9d6`) |
+| **Last Commit Date** | `2026-10-26 17:24:44 +0530` |
+| **Author** | `Falcon-20199 <rizwan1612010@gmai.com>` |
 | **Remote URL** | `https://github.com/nk6629716-afk/fallingsun` |
 | **Working Tree Status** | `Clean working directory (all files committed)` |
-| **Latest Message** | `docs: auto-update REPORT.md before push` |
+| **Latest Message** | `fix(vitals): remove activity risk panel and restore previous 3-column soldier vitals layout with actual soldier names` |
 
 ---
 
