@@ -246,6 +246,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
 
             <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: '1.25rem' }}>
               Your account has been registered in the SENTINEL directory. In accordance with security protocol, all personnel profiles must be authorized by an administrator before access to live mission data, telemetry, and health records is granted.
+              {' '}If you receive a verification email, confirm it before checking your approval status.
             </p>
 
             {/* Profile summary */}

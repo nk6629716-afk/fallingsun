@@ -10,6 +10,7 @@ import { UserRole, UserProfile } from '../../../shared/types';
 import { config } from '../config';
 import { db } from '../db/database';
 import { getSessionUser } from '../services/localAuthService';
+import { getAccountById } from '../services/accountRepository';
 
 export interface AuthenticatedRequest extends Request {
   user?: UserProfile;
@@ -68,8 +69,14 @@ export async function authenticateToken(req: AuthenticatedRequest, res: Response
   const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : null;
 
   if (token?.startsWith('sentinel-session-')) {
-    const user = getSessionUser(token);
-    if (user) { req.user = user; return next(); }
+    try {
+      const cached = getSessionUser(token);
+      const user = cached && isSupabaseConfigured() ? await getAccountById(cached.id) : cached;
+      if (user?.status === 'approved') { req.user = user; return next(); }
+    } catch {
+      res.status(503).json({ success: false, error: 'Account verification is unavailable. Try again.' });
+      return;
+    }
     res.status(401).json({ success: false, error: 'Session expired or approval revoked. Sign in again.' });
     return;
   }
@@ -87,7 +94,7 @@ export async function authenticateToken(req: AuthenticatedRequest, res: Response
       try {
         const { data: { user }, error } = await supabase.auth.getUser(token);
         if (!error && user) {
-          const approvedUser = user.email ? db.getUserByEmail(user.email) : null;
+          const approvedUser = await getAccountById(user.id);
           if (!approvedUser || approvedUser.status !== 'approved') {
             res.status(403).json({ success: false, error: 'Administrator approval is required.' });
             return;

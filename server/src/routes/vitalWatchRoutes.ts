@@ -1,11 +1,12 @@
 import { Router, Request, Response } from 'express';
 import { randomUUID } from 'node:crypto';
 import { db } from '../db/database';
-import { getSupabaseClient, isSupabaseConfigured } from '../db/supabaseClient';
+import { getSupabaseClient, getSupabaseAuthClient, isSupabaseConfigured } from '../db/supabaseClient';
 import { VitalSignRecord, UserProfile, PersonnelProfile } from '../../../shared/types';
 import { config } from '../config';
 import { AuthenticatedRequest, requireRole } from '../middleware/auth';
 import { hashPassword, verifyPassword, issueSession, revokeSession } from '../services/localAuthService';
+import { getAccountByEmail, getAccountById, listAccounts, approveAccount } from '../services/accountRepository';
 
 export const vitalWatchRouter = Router();
 export const authRouter = Router();
@@ -30,9 +31,6 @@ authRouter.post('/signup', async (req: Request, res: Response) => {
   if (typeof password !== 'string' || password.length < 6 || password.length > 256) {
     return res.status(400).json({ success: false, error: 'Password must contain 6 to 256 characters.' });
   }
-  if (db.getUserByEmail(email)) {
-    return res.status(409).json({ success: false, error: 'An account with this email already exists.' });
-  }
   const clean = (value: unknown, fallback?: string) => typeof value === 'string' ? value.trim() || fallback : fallback;
   const user: UserProfile = {
     id: `USR-${randomUUID()}`, email: email.trim().toLowerCase(), name: name.trim(),
@@ -42,11 +40,25 @@ authRouter.post('/signup', async (req: Request, res: Response) => {
     createdAt: new Date().toISOString(),
   };
   try {
+    if (await getAccountByEmail(email)) {
+      return res.status(409).json({ success: false, error: 'An account with this email already exists.' });
+    }
     if (isSupabaseConfigured()) {
-      const supabase = getSupabaseClient();
-      if (!supabase) throw new Error('Authentication provider unavailable');
-      const { error } = await supabase.auth.signUp({ email: user.email, password, options: { data: { name: user.name } } });
+      const supabase = getSupabaseAuthClient();
+      const { data, error } = await supabase.auth.signUp({ email: user.email, password, options: { data: {
+        name: user.name, role: user.role, callsign: user.callsign, team_id: user.teamId,
+        team_name: user.teamName, mission_id: user.missionId, mission_name: user.missionName,
+      } } });
       if (error) return res.status(400).json({ success: false, error: error.message });
+      if (!data.user || data.user.identities?.length === 0) {
+        return res.status(409).json({ success: false, error: 'An account with this email already exists.' });
+      }
+      // SQL trigger creates the pending profile in the same transaction as auth.users.
+      const saved = await getAccountById(data.user.id);
+      if (!saved) throw new Error('Account profile was not provisioned. Apply auth-schema.sql.');
+      db.saveUser(saved);
+      return res.status(201).json({ success: true, user: saved,
+        message: 'Registration received. Confirm your email if requested; administrator approval is required.' });
     } else {
       const hash = await hashPassword(password);
       // Recheck after asynchronous hashing to prevent duplicate concurrent registrations.
@@ -79,20 +91,25 @@ authRouter.post('/login', async (req: Request, res: Response) => {
   if (typeof email !== 'string' || typeof password !== 'string' || !password || password.length > 256) {
     return res.status(400).json({ success: false, error: 'Email and password are required.' });
   }
-  const user = db.getUserByEmail(email);
   try {
+    let user: UserProfile | null = null;
     let valid = false;
     if (isSupabaseConfigured()) {
-      const supabase = getSupabaseClient();
-      if (!supabase) throw new Error('Authentication provider unavailable');
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      const supabase = getSupabaseAuthClient();
+      const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
+      if (error?.code === 'email_not_confirmed') {
+        return res.status(403).json({ success: false, status: 'email_unconfirmed', error: 'Confirm your email before signing in.' });
+      }
       valid = !error && Boolean(data.user && data.session);
-    } else if (user) {
-      valid = await verifyPassword(user.id, password);
+      if (valid) user = await getAccountById(data.user!.id);
+    } else {
+      user = db.getUserByEmail(email);
+      if (user) valid = await verifyPassword(user.id, password);
     }
     if (!valid || !user) return res.status(401).json({ success: false, error: 'Invalid email or password. Demo profiles require the explicit demo sign in.' });
     if (user.status !== 'approved') return res.status(403).json({ success: false, status: user.status,
       error: user.status === 'pending' ? 'Account pending administrator approval.' : 'Account access has been declined by an administrator.' });
+    db.saveUser(user);
     const token = issueSession(user.id);
     return res.json({ success: true, user, token, data: { token, user } });
   } catch {
@@ -115,8 +132,7 @@ authRouter.post('/forgot-password', async (req, res) => {
   if (typeof email !== 'string' || !email.includes('@')) return res.status(400).json({ success: false, error: 'A valid email is required.' });
   if (!isSupabaseConfigured()) return res.status(503).json({ success: false, error: 'Email reset is unavailable in the local demo. Contact an administrator.' });
   try {
-    const supabase = getSupabaseClient();
-    if (!supabase) throw new Error('Authentication provider unavailable');
+    const supabase = getSupabaseAuthClient();
     const { error } = await supabase.auth.resetPasswordForEmail(email);
     if (error) throw error;
     return res.json({ success: true, message: 'If the account exists, password reset instructions will be sent.' });
@@ -125,19 +141,27 @@ authRouter.post('/forgot-password', async (req, res) => {
   }
 });
 
-authRouter.get('/users', requireSession, requireRole(['admin', 'administrator']), (_req, res) => {
-  const users = db.getUsers();
-  return res.json({ success: true, users, pendingCount: users.filter(u => u.status === 'pending').length,
-    approvedCount: users.filter(u => u.status === 'approved').length });
+authRouter.get('/users', requireSession, requireRole(['admin', 'administrator']), async (_req, res) => {
+  try {
+    const users = await listAccounts();
+    return res.json({ success: true, users, pendingCount: users.filter(u => u.status === 'pending').length,
+      approvedCount: users.filter(u => u.status === 'approved').length });
+  } catch {
+    return res.status(503).json({ success: false, error: 'Account database is unavailable.' });
+  }
 });
 
-authRouter.patch('/users/:id/approve', requireSession, requireRole(['admin', 'administrator']), (req: AuthenticatedRequest, res: Response) => {
+authRouter.patch('/users/:id/approve', requireSession, requireRole(['admin', 'administrator']), async (req: AuthenticatedRequest, res: Response) => {
   const { status } = req.body;
   if (status !== 'approved' && status !== 'rejected') return res.status(400).json({ success: false, error: "Status must be either 'approved' or 'rejected'." });
-  const updated = db.approveUser(req.params.id, req.user!.id, status);
-  if (!updated) return res.status(404).json({ success: false, error: 'User not found.' });
-  if (status === 'approved' && !db.getPersonnelById(updated.id)) db.savePersonnel({ ...updated, locationHistory: [], isStale: true });
-  return res.json({ success: true, user: updated, message: `User ${updated.name} has been ${status}.` });
+  try {
+    const updated = await approveAccount(req.params.id, req.user!.id, status);
+    if (!updated) return res.status(404).json({ success: false, error: 'User not found.' });
+    if (status === 'approved' && !db.getPersonnelById(updated.id)) db.savePersonnel({ ...updated, locationHistory: [], isStale: true });
+    return res.json({ success: true, user: updated, message: `User ${updated.name} has been ${status}.` });
+  } catch {
+    return res.status(503).json({ success: false, error: 'Approval could not be saved. Try again.' });
+  }
 });
 
 // ============================================================================

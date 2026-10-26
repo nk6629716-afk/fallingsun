@@ -1,10 +1,10 @@
 -- ============================================================================
 -- SENTINEL: Integrated Situational Awareness & Emergency Response Platform
 -- Supabase PostgreSQL Schema & Deterministic Baseline Seed
--- Target Instance: https://cajrbzfsfsimxweomrlt.supabase.co
+-- Apply to your own Supabase project; all seed data is synthetic.
 --
 -- Instructions:
--- 1. Open your Supabase Dashboard: https://supabase.com/dashboard/project/cajrbzfsfsimxweomrlt
+-- 1. Open your project in the Supabase Dashboard.
 -- 2. Go to the "SQL Editor" tab on the left sidebar.
 -- 3. Click "New Query", paste this entire script, and click "Run".
 -- ============================================================================
@@ -162,24 +162,44 @@ ALTER TABLE public.sentinel_sync_registry ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.sentinel_soldier_vitals ENABLE ROW LEVEL SECURITY;
 
 -- Allow read access for authenticated and anonymous clients (Demo evaluation)
+DROP POLICY IF EXISTS "Allow public read on incidents" ON public.sentinel_incidents;
 CREATE POLICY "Allow public read on incidents" ON public.sentinel_incidents FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Allow public read on tracks" ON public.sentinel_tracks;
 CREATE POLICY "Allow public read on tracks" ON public.sentinel_tracks FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Allow public read on alerts" ON public.sentinel_alerts;
 CREATE POLICY "Allow public read on alerts" ON public.sentinel_alerts FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Allow public read on observations" ON public.sentinel_observations;
 CREATE POLICY "Allow public read on observations" ON public.sentinel_observations FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Allow public read on patients" ON public.sentinel_patients;
 CREATE POLICY "Allow public read on patients" ON public.sentinel_patients FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Allow public read on hazards" ON public.sentinel_hazards;
 CREATE POLICY "Allow public read on hazards" ON public.sentinel_hazards FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Allow public read on sync_registry" ON public.sentinel_sync_registry;
 CREATE POLICY "Allow public read on sync_registry" ON public.sentinel_sync_registry FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Allow public read on soldier_vitals" ON public.sentinel_soldier_vitals;
 CREATE POLICY "Allow public read on soldier_vitals" ON public.sentinel_soldier_vitals FOR SELECT USING (true);
 
 -- Allow full write/update access for service role
-CREATE POLICY "Service role full access on incidents" ON public.sentinel_incidents FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Service role full access on tracks" ON public.sentinel_tracks FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Service role full access on alerts" ON public.sentinel_alerts FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Service role full access on observations" ON public.sentinel_observations FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Service role full access on patients" ON public.sentinel_patients FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Service role full access on hazards" ON public.sentinel_hazards FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Service role full access on sync_registry" ON public.sentinel_sync_registry FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Service role full access on soldier_vitals" ON public.sentinel_soldier_vitals FOR ALL USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Service role full access on incidents" ON public.sentinel_incidents;
+CREATE POLICY "Service role full access on incidents" ON public.sentinel_incidents FOR ALL TO service_role USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Service role full access on tracks" ON public.sentinel_tracks;
+CREATE POLICY "Service role full access on tracks" ON public.sentinel_tracks FOR ALL TO service_role USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Service role full access on alerts" ON public.sentinel_alerts;
+CREATE POLICY "Service role full access on alerts" ON public.sentinel_alerts FOR ALL TO service_role USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Service role full access on observations" ON public.sentinel_observations;
+CREATE POLICY "Service role full access on observations" ON public.sentinel_observations FOR ALL TO service_role USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Service role full access on patients" ON public.sentinel_patients;
+CREATE POLICY "Service role full access on patients" ON public.sentinel_patients FOR ALL TO service_role USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Service role full access on hazards" ON public.sentinel_hazards;
+CREATE POLICY "Service role full access on hazards" ON public.sentinel_hazards FOR ALL TO service_role USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Service role full access on sync_registry" ON public.sentinel_sync_registry;
+CREATE POLICY "Service role full access on sync_registry" ON public.sentinel_sync_registry FOR ALL TO service_role USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Service role full access on soldier_vitals" ON public.sentinel_soldier_vitals;
+CREATE POLICY "Service role full access on soldier_vitals" ON public.sentinel_soldier_vitals FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+-- Explicit privileges for projects without legacy default grants.
+GRANT SELECT ON public.sentinel_incidents, public.sentinel_tracks, public.sentinel_alerts, public.sentinel_observations, public.sentinel_patients, public.sentinel_hazards, public.sentinel_sync_registry, public.sentinel_soldier_vitals TO anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.sentinel_incidents, public.sentinel_tracks, public.sentinel_alerts, public.sentinel_observations, public.sentinel_patients, public.sentinel_hazards, public.sentinel_sync_registry, public.sentinel_soldier_vitals TO service_role;
 
 -- ----------------------------------------------------------------------------
 -- 4. Seed Baseline Deterministic Data
@@ -187,7 +207,7 @@ CREATE POLICY "Service role full access on soldier_vitals" ON public.sentinel_so
 
 -- Seed Incidents
 INSERT INTO public.sentinel_incidents (id, client_id, source_module, type, priority, status, title, notes, location, created_at, updated_at, synced_at)
-VALUES 
+VALUES
     ('INC-101', 'cli-inc-101', 'fieldlink', 'infrastructure', 'high', 'active', 'Bridge Structural Impairment on Sector Alpha', 'Ground unit Bravo reports primary crossing bridge damaged by flash surge. Vehicle traffic suspended.', '{"lat": 34.0522, "lng": -118.2437, "name": "Sector Alpha - River Crossing"}'::jsonb, '2026-10-25T07:45:00.000Z', '2026-10-25T07:45:00.000Z', '2026-10-25T07:46:12.000Z'),
     ('INC-102', 'cli-inc-102', 'mediroute', 'medical', 'critical', 'active', 'Multi-Casualty Extraction Request', 'Three casualties requiring immediate stabilization near checkpoint Charlie.', '{"lat": 34.0620, "lng": -118.2380, "name": "Checkpoint Charlie"}'::jsonb, '2026-10-25T07:50:00.000Z', '2026-10-25T07:50:00.000Z', '2026-10-25T07:50:30.000Z'),
     ('INC-103', 'cli-inc-103', 'skywatch', 'hostile_drone', 'high', 'in_progress', 'Unidentified UAS Intrusion Sector Echo', 'Rogue drone detected loitering above restricted humanitarian aid corridor.', '{"lat": 34.0580, "lng": -118.2510, "name": "Sector Echo - Aid Corridor"}'::jsonb, '2026-10-25T07:55:00.000Z', '2026-10-25T07:55:00.000Z', '2026-10-25T07:55:10.000Z')

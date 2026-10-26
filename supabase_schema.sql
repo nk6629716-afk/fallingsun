@@ -1,10 +1,10 @@
 -- ============================================================================
 -- SENTINEL: Integrated Situational Awareness & Emergency Response Platform
 -- Supabase PostgreSQL Schema & Deterministic Baseline Seed
--- Target Instance: https://cajrbzfsfsimxweomrlt.supabase.co
+-- Apply to your own Supabase project; all seed data is synthetic.
 --
 -- Instructions:
--- 1. Open your Supabase Dashboard: https://supabase.com/dashboard/project/cajrbzfsfsimxweomrlt
+-- 1. Open your project in the Supabase Dashboard.
 -- 2. Go to the "SQL Editor" tab on the left sidebar.
 -- 3. Click "New Query", paste this entire script, and click "Run".
 -- ============================================================================
@@ -115,6 +115,26 @@ CREATE TABLE IF NOT EXISTS public.sentinel_sync_registry (
     synced_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- H. Soldier Vitals Table (Operational Medical Monitoring)
+CREATE TABLE IF NOT EXISTS public.sentinel_soldier_vitals (
+    id TEXT PRIMARY KEY,
+    soldier_id TEXT NOT NULL,
+    callsign TEXT NOT NULL,
+    unit TEXT NOT NULL,
+    timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    heart_rate_bpm NUMERIC,
+    blood_pressure_systolic NUMERIC,
+    blood_pressure_diastolic NUMERIC,
+    temperature_celsius NUMERIC,
+    oxygen_saturation_pct NUMERIC,
+    respiratory_rate_bpm NUMERIC,
+    clinical_notes TEXT,
+    recorded_by TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    is_simulated BOOLEAN NOT NULL DEFAULT TRUE
+);
+
 -- ----------------------------------------------------------------------------
 -- 2. Performance Indexes
 -- ----------------------------------------------------------------------------
@@ -126,6 +146,8 @@ CREATE INDEX IF NOT EXISTS idx_alerts_track_id ON public.sentinel_alerts(track_i
 CREATE INDEX IF NOT EXISTS idx_alerts_acknowledged ON public.sentinel_alerts(acknowledged);
 CREATE INDEX IF NOT EXISTS idx_patients_triage ON public.sentinel_patients(triage_category);
 CREATE INDEX IF NOT EXISTS idx_hazards_edge_id ON public.sentinel_hazards(edge_id);
+CREATE INDEX IF NOT EXISTS idx_soldier_vitals_soldier_id ON public.sentinel_soldier_vitals(soldier_id);
+CREATE INDEX IF NOT EXISTS idx_soldier_vitals_timestamp ON public.sentinel_soldier_vitals(timestamp DESC);
 
 -- ----------------------------------------------------------------------------
 -- 3. Row Level Security (RLS) Policies
@@ -137,24 +159,47 @@ ALTER TABLE public.sentinel_observations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.sentinel_patients ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.sentinel_hazards ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.sentinel_sync_registry ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.sentinel_soldier_vitals ENABLE ROW LEVEL SECURITY;
 
 -- Allow read access for authenticated and anonymous clients (Demo evaluation)
+DROP POLICY IF EXISTS "Allow public read on incidents" ON public.sentinel_incidents;
 CREATE POLICY "Allow public read on incidents" ON public.sentinel_incidents FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Allow public read on tracks" ON public.sentinel_tracks;
 CREATE POLICY "Allow public read on tracks" ON public.sentinel_tracks FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Allow public read on alerts" ON public.sentinel_alerts;
 CREATE POLICY "Allow public read on alerts" ON public.sentinel_alerts FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Allow public read on observations" ON public.sentinel_observations;
 CREATE POLICY "Allow public read on observations" ON public.sentinel_observations FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Allow public read on patients" ON public.sentinel_patients;
 CREATE POLICY "Allow public read on patients" ON public.sentinel_patients FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Allow public read on hazards" ON public.sentinel_hazards;
 CREATE POLICY "Allow public read on hazards" ON public.sentinel_hazards FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Allow public read on sync_registry" ON public.sentinel_sync_registry;
 CREATE POLICY "Allow public read on sync_registry" ON public.sentinel_sync_registry FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Allow public read on soldier_vitals" ON public.sentinel_soldier_vitals;
+CREATE POLICY "Allow public read on soldier_vitals" ON public.sentinel_soldier_vitals FOR SELECT USING (true);
 
 -- Allow full write/update access for service role
-CREATE POLICY "Service role full access on incidents" ON public.sentinel_incidents FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Service role full access on tracks" ON public.sentinel_tracks FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Service role full access on alerts" ON public.sentinel_alerts FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Service role full access on observations" ON public.sentinel_observations FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Service role full access on patients" ON public.sentinel_patients FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Service role full access on hazards" ON public.sentinel_hazards FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Service role full access on sync_registry" ON public.sentinel_sync_registry FOR ALL USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Service role full access on incidents" ON public.sentinel_incidents;
+CREATE POLICY "Service role full access on incidents" ON public.sentinel_incidents FOR ALL TO service_role USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Service role full access on tracks" ON public.sentinel_tracks;
+CREATE POLICY "Service role full access on tracks" ON public.sentinel_tracks FOR ALL TO service_role USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Service role full access on alerts" ON public.sentinel_alerts;
+CREATE POLICY "Service role full access on alerts" ON public.sentinel_alerts FOR ALL TO service_role USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Service role full access on observations" ON public.sentinel_observations;
+CREATE POLICY "Service role full access on observations" ON public.sentinel_observations FOR ALL TO service_role USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Service role full access on patients" ON public.sentinel_patients;
+CREATE POLICY "Service role full access on patients" ON public.sentinel_patients FOR ALL TO service_role USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Service role full access on hazards" ON public.sentinel_hazards;
+CREATE POLICY "Service role full access on hazards" ON public.sentinel_hazards FOR ALL TO service_role USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Service role full access on sync_registry" ON public.sentinel_sync_registry;
+CREATE POLICY "Service role full access on sync_registry" ON public.sentinel_sync_registry FOR ALL TO service_role USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Service role full access on soldier_vitals" ON public.sentinel_soldier_vitals;
+CREATE POLICY "Service role full access on soldier_vitals" ON public.sentinel_soldier_vitals FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+-- Explicit privileges for projects without legacy default grants.
+GRANT SELECT ON public.sentinel_incidents, public.sentinel_tracks, public.sentinel_alerts, public.sentinel_observations, public.sentinel_patients, public.sentinel_hazards, public.sentinel_sync_registry, public.sentinel_soldier_vitals TO anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.sentinel_incidents, public.sentinel_tracks, public.sentinel_alerts, public.sentinel_observations, public.sentinel_patients, public.sentinel_hazards, public.sentinel_sync_registry, public.sentinel_soldier_vitals TO service_role;
 
 -- ----------------------------------------------------------------------------
 -- 4. Seed Baseline Deterministic Data
@@ -162,7 +207,7 @@ CREATE POLICY "Service role full access on sync_registry" ON public.sentinel_syn
 
 -- Seed Incidents
 INSERT INTO public.sentinel_incidents (id, client_id, source_module, type, priority, status, title, notes, location, created_at, updated_at, synced_at)
-VALUES 
+VALUES
     ('INC-101', 'cli-inc-101', 'fieldlink', 'infrastructure', 'high', 'active', 'Bridge Structural Impairment on Sector Alpha', 'Ground unit Bravo reports primary crossing bridge damaged by flash surge. Vehicle traffic suspended.', '{"lat": 34.0522, "lng": -118.2437, "name": "Sector Alpha - River Crossing"}'::jsonb, '2026-10-25T07:45:00.000Z', '2026-10-25T07:45:00.000Z', '2026-10-25T07:46:12.000Z'),
     ('INC-102', 'cli-inc-102', 'mediroute', 'medical', 'critical', 'active', 'Multi-Casualty Extraction Request', 'Three casualties requiring immediate stabilization near checkpoint Charlie.', '{"lat": 34.0620, "lng": -118.2380, "name": "Checkpoint Charlie"}'::jsonb, '2026-10-25T07:50:00.000Z', '2026-10-25T07:50:00.000Z', '2026-10-25T07:50:30.000Z'),
     ('INC-103', 'cli-inc-103', 'skywatch', 'hostile_drone', 'high', 'in_progress', 'Unidentified UAS Intrusion Sector Echo', 'Rogue drone detected loitering above restricted humanitarian aid corridor.', '{"lat": 34.0580, "lng": -118.2510, "name": "Sector Echo - Aid Corridor"}'::jsonb, '2026-10-25T07:55:00.000Z', '2026-10-25T07:55:00.000Z', '2026-10-25T07:55:10.000Z')
@@ -188,6 +233,14 @@ INSERT INTO public.sentinel_hazards (id, edge_id, from_node, to_node, hazard_typ
 VALUES
     ('HAZ-001', 'EDGE-1', 'NODE-CAS-3', 'NODE-INT-5', 'bridge_damage', false, 'Field Recon Team 2'),
     ('HAZ-002', 'EDGE-2', 'NODE-CAS-3', 'NODE-AID-2', 'clear_pathway', false, 'Patrol Bravo')
+ON CONFLICT (id) DO NOTHING;
+
+-- Seed Soldier Vitals
+INSERT INTO public.sentinel_soldier_vitals (id, soldier_id, callsign, unit, timestamp, heart_rate_bpm, blood_pressure_systolic, blood_pressure_diastolic, temperature_celsius, oxygen_saturation_pct, respiratory_rate_bpm, clinical_notes, recorded_by)
+VALUES
+    ('REC-001-1', 'SOL-001', 'SOL-001 (Aarav)', '1st Recon Team (CCP Delta)', '2026-10-25T08:10:58.000Z', 136, 88, 54, 37.8, 88, 34, 'Critical hypoxemia (SpO2 88%) and tachypnea (RR 34/min) following blast trauma. Immediate airway management required.', 'med_officer_1@sentinel.mil'),
+    ('REC-002-1', 'SOL-002', 'SOL-002 (Aditi)', '2nd Infantry Patrol (CCP Delta)', '2026-10-25T08:05:00.000Z', 86, 122, 78, 36.9, 96, 20, 'Compound lower leg fracture splinted on site; pain managed with analgesics. Respiration stable.', 'med_officer_1@sentinel.mil'),
+    ('REC-003-1', 'SOL-003', 'SOL-003 (Dev)', 'Combat Support Medevac (Aid Station Bravo)', '2026-10-25T07:55:00.000Z', 74, 118, 76, 36.7, 99, 16, 'Superficial shrapnel cuts bandaged. Ambulatory walking wounded; stable.', 'med_officer_2@sentinel.mil')
 ON CONFLICT (id) DO NOTHING;
 
 -- Seed Road Graph Nodes & Edges via comment for reference

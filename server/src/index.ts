@@ -1,9 +1,10 @@
 import { app } from './app';
 import { config } from './config';
 import { telemetryService } from './services/telemetryService';
-import { isSupabaseConfigured } from './db/supabaseClient';
+import { isSupabaseConfigured, assertSupabaseConfiguration } from './db/supabaseClient';
 
 const HOST = '0.0.0.0';
+assertSupabaseConfiguration();
 
 const server = app.listen(config.port, HOST, () => {
   const supabaseActive = isSupabaseConfigured();

@@ -123,6 +123,8 @@ npm run build
 
 ## Project Status
 
+For Supabase email/password authentication and administrator approval, follow [the Supabase setup guide](docs/supabase-setup.md). It includes both SQL files, backend environment variables, first-admin setup, and the current operational-data persistence limits.
+
 - **Triage Engine**: 100% functional.
 - **Evacuation Routing**: 100% functional with automated hazard detours.
 - **Facility & Fleet Tracker**: 100% functional.
