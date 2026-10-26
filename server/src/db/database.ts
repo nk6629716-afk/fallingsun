@@ -12,6 +12,11 @@ import {
   SyncItemResult,
   SoldierProfile,
   SoldierVitalsRecord,
+  AccountProfile,
+  RegistrationDecisionAudit,
+  SoldierActivity,
+  ActivityRiskReview,
+  ApprovalStatus,
 } from '../../../shared/types';
 import {
   INITIAL_INCIDENTS,
@@ -39,6 +44,10 @@ export interface DatabaseState {
   hazards: Record<string, HazardEdge>;
   soldiers: Record<string, SoldierProfile>;
   soldierVitals: Record<string, SoldierVitalsRecord>;
+  registrations: Record<string, AccountProfile>;
+  decisionAudits: Record<string, RegistrationDecisionAudit>;
+  activities: Record<string, SoldierActivity>;
+  activityReviews: Record<string, ActivityRiskReview>;
   graphNodes: RoadGraphNode[];
   graphEdges: RoadGraphEdge[];
   metadata: {
@@ -119,6 +128,32 @@ export class Database {
       soldierVitals[vit.id] = { ...vit };
     });
 
+    // Default bootstrap administrator account
+    const registrations: Record<string, AccountProfile> = {
+      'reg-admin-bootstrap': {
+        id: 'reg-admin-bootstrap',
+        authUserId: 'usr-admin-01',
+        email: 'admin@sentinel.mil',
+        role: 'administrator',
+        approvalStatus: 'approved',
+        soldierId: 'SOL-101',
+        badgeName: 'Commander Alpha',
+        regimentNo: '001',
+        heightCm: 180,
+        weightKg: 78,
+        ageYears: 38,
+        profileRecordedAt: '2026-10-25T00:00:00.000Z',
+        submittedAt: '2026-10-25T00:00:00.000Z',
+        reviewedAt: '2026-10-25T00:00:00.000Z',
+        reviewedBy: 'SYSTEM_BOOTSTRAP',
+        decisionReason: 'Initial administrative bootstrap',
+      },
+    };
+
+    const decisionAudits: Record<string, RegistrationDecisionAudit> = {};
+    const activities: Record<string, SoldierActivity> = {};
+    const activityReviews: Record<string, ActivityRiskReview> = {};
+
     return {
       incidents,
       syncRegistry,
@@ -129,6 +164,10 @@ export class Database {
       hazards,
       soldiers,
       soldierVitals,
+      registrations,
+      decisionAudits,
+      activities,
+      activityReviews,
       graphNodes: [...ROAD_GRAPH_NODES],
       graphEdges: [...ROAD_GRAPH_EDGES],
       metadata: {
@@ -171,12 +210,46 @@ export class Database {
         }
 
         // Hydrate soldiers and soldierVitals if upgrading from previous schema version
+        let needsSave = false;
         if (!parsed.soldiers || Object.keys(parsed.soldiers).length === 0) {
           const defaultState = this.getDefaultState();
           parsed.soldiers = defaultState.soldiers;
           if (!parsed.soldierVitals) {
             parsed.soldierVitals = defaultState.soldierVitals;
           }
+          needsSave = true;
+        }
+
+        // Ensure any new baseline soldiers are present
+        if (!parsed.soldiers) {
+          parsed.soldiers = {};
+        }
+        INITIAL_SOLDIERS.forEach((sol) => {
+          if (!parsed.soldiers[sol.id]) {
+            parsed.soldiers[sol.id] = { ...sol };
+            needsSave = true;
+          }
+        });
+
+        // Hydrate registrations, decisionAudits, activities, activityReviews
+        if (!parsed.registrations || Object.keys(parsed.registrations).length === 0) {
+          const defaultState = this.getDefaultState();
+          parsed.registrations = defaultState.registrations;
+          needsSave = true;
+        }
+        if (!parsed.decisionAudits) {
+          parsed.decisionAudits = {};
+          needsSave = true;
+        }
+        if (!parsed.activities) {
+          parsed.activities = {};
+          needsSave = true;
+        }
+        if (!parsed.activityReviews) {
+          parsed.activityReviews = {};
+          needsSave = true;
+        }
+        if (needsSave) {
           this.persist(parsed);
         }
 
@@ -524,6 +597,101 @@ export class Database {
     }
 
     return this.state.soldierVitals[record.id];
+  }
+
+  public saveSoldier(soldier: SoldierProfile): SoldierProfile {
+    if (!this.state.soldiers) {
+      this.state.soldiers = {};
+    }
+    this.state.soldiers[soldier.id] = { ...soldier };
+    this.persist();
+    return this.state.soldiers[soldier.id];
+  }
+
+  // ------------------------------------------------------------------------
+  // Registrations & Approvals
+  // ------------------------------------------------------------------------
+  public getRegistrations(filter?: { status?: ApprovalStatus }): AccountProfile[] {
+    let list = Object.values(this.state.registrations || {});
+    if (filter?.status) {
+      list = list.filter((r) => r.approvalStatus === filter.status);
+    }
+    return list.sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
+  }
+
+  public getRegistrationById(id: string): AccountProfile | null {
+    return this.state.registrations?.[id] || null;
+  }
+
+  public getRegistrationByEmail(email: string): AccountProfile | null {
+    const norm = email.toLowerCase().trim();
+    return Object.values(this.state.registrations || {}).find((r) => r.email.toLowerCase().trim() === norm) || null;
+  }
+
+  public getRegistrationByAuthUserId(authUserId: string): AccountProfile | null {
+    return Object.values(this.state.registrations || {}).find((r) => r.authUserId === authUserId) || null;
+  }
+
+  public saveRegistration(reg: AccountProfile): AccountProfile {
+    if (!this.state.registrations) {
+      this.state.registrations = {};
+    }
+    this.state.registrations[reg.id] = { ...reg };
+    this.persist();
+    return this.state.registrations[reg.id];
+  }
+
+  public recordDecisionAudit(audit: RegistrationDecisionAudit): RegistrationDecisionAudit {
+    if (!this.state.decisionAudits) {
+      this.state.decisionAudits = {};
+    }
+    this.state.decisionAudits[audit.id] = { ...audit };
+    this.persist();
+    return this.state.decisionAudits[audit.id];
+  }
+
+  public getDecisionAudits(registrationId?: string): RegistrationDecisionAudit[] {
+    let list = Object.values(this.state.decisionAudits || {});
+    if (registrationId) {
+      list = list.filter((a) => a.registrationId === registrationId);
+    }
+    return list.sort((a, b) => new Date(b.decisionAt).getTime() - new Date(a.decisionAt).getTime());
+  }
+
+  // ------------------------------------------------------------------------
+  // Soldier Activities & Risk Reviews
+  // ------------------------------------------------------------------------
+  public saveActivity(activity: SoldierActivity): SoldierActivity {
+    if (!this.state.activities) {
+      this.state.activities = {};
+    }
+    this.state.activities[activity.id] = { ...activity };
+    this.persist();
+    return this.state.activities[activity.id];
+  }
+
+  public getActivityById(id: string): SoldierActivity | null {
+    return this.state.activities?.[id] || null;
+  }
+
+  public getActivitiesBySoldier(soldierId: string): SoldierActivity[] {
+    return Object.values(this.state.activities || {})
+      .filter((a) => a.soldierId === soldierId)
+      .sort((a, b) => new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime());
+  }
+
+  public saveActivityReview(review: ActivityRiskReview): ActivityRiskReview {
+    if (!this.state.activityReviews) {
+      this.state.activityReviews = {};
+    }
+    this.state.activityReviews[review.id] = { ...review };
+    this.persist();
+    return this.state.activityReviews[review.id];
+  }
+
+  public getActivityReviewByActivityId(activityId: string): ActivityRiskReview | null {
+    return Object.values(this.state.activityReviews || {})
+      .find((r) => r.activityId === activityId) || null;
   }
 
   public getRoadGraph(): { nodes: RoadGraphNode[]; edges: RoadGraphEdge[] } {

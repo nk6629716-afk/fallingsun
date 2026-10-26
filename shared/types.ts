@@ -680,18 +680,63 @@ export type UserRole =
   | 'medical_officer'
   | 'read_only_viewer';
 
+export type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'suspended';
+
 export interface UserProfile {
   id: string;
   email: string;
   role: UserRole;
   callsign?: string;
   unit?: string;
+  approvalStatus?: ApprovalStatus;
+  soldierId?: string;
+  badgeName?: string;
+  regimentNo?: string;
+  heightCm?: number;
+  weightKg?: number;
+  ageYears?: number;
+  isDemo?: boolean;
 }
 
 export interface AuthSession {
   token: string;
   user: UserProfile;
   expiresAt?: number;
+}
+
+export interface AccountProfile {
+  id: string;
+  authUserId: string;
+  email: string;
+  role: UserRole;
+  approvalStatus: ApprovalStatus;
+  soldierId: string;
+  badgeName: string;
+  regimentNo: string;
+  heightCm: number;
+  weightKg: number;
+  ageYears: number;
+  profileRecordedAt: string;
+  submittedAt: string;
+  reviewedAt?: string;
+  reviewedBy?: string;
+  decisionReason?: string;
+}
+
+export interface RegistrationDecisionInput {
+  decision: 'approved' | 'rejected' | 'suspended';
+  reason?: string;
+  role?: UserRole;
+}
+
+export interface RegistrationDecisionAudit {
+  id: string;
+  registrationId: string;
+  previousStatus: ApprovalStatus;
+  newStatus: ApprovalStatus;
+  decisionBy: string;
+  decisionAt: string;
+  reason?: string;
 }
 
 // -------------------------------------------------------------
@@ -702,6 +747,14 @@ export interface SoldierProfile {
   callsign: string; // e.g. 'SOL-001 (Aarav)'
   unit: string; // e.g. '1st Recon Team (CCP Delta)'
   status: 'active' | 'in_transit' | 'standby';
+  authUserId?: string;
+  badgeName?: string;
+  regimentNo?: string;
+  heightCm?: number;
+  weightKg?: number;
+  ageYears?: number;
+  profileRecordedAt?: string;
+  approvalStatus?: ApprovalStatus;
 }
 
 export interface SoldierVitalsRecord {
@@ -734,4 +787,64 @@ export interface CreateSoldierVitalsInput {
   respiratoryRateBpm?: number;
   clinicalNotes?: string;
 }
+
+// -------------------------------------------------------------
+// MODULE: SOLDIER PHYSICAL ACTIVITY & AI RISK REVIEW
+// -------------------------------------------------------------
+export type ActivityType = 'running' | 'marching' | 'lifting' | 'calisthenics' | 'patrol';
+export type ActivityIntensity = 'low' | 'moderate' | 'high' | 'maximum';
+
+export interface SoldierActivity {
+  id: string;
+  soldierId: string;
+  activityType: ActivityType;
+  durationMinutes: number;
+  intensity: ActivityIntensity;
+  carriedLoadKg?: number;
+  restRecoveryInfo?: string;
+  environmentalConditions?: {
+    temperatureCelsius?: number;
+    humidityPct?: number;
+    terrain?: string;
+  };
+  notes?: string;
+  recordedAt: string;
+  isSimulated?: true;
+}
+
+export interface CreateSoldierActivityInput {
+  soldierId: string;
+  activityType: ActivityType;
+  durationMinutes: number;
+  intensity: ActivityIntensity;
+  carriedLoadKg?: number;
+  restRecoveryInfo?: string;
+  environmentalConditions?: {
+    temperatureCelsius?: number;
+    humidityPct?: number;
+    terrain?: string;
+  };
+  notes?: string;
+}
+
+export type ActivityRiskStatus = 'needs_review' | 'no_specific_concern_identified' | 'insufficient_data';
+
+export interface ActivityRiskReview {
+  id: string;
+  activityId: string;
+  soldierId: string;
+  status: ActivityRiskStatus;
+  summary: string;
+  concerns: Array<{
+    description: string;
+    evidenceFieldIds: string[];
+  }>;
+  missingInputs: string[];
+  suggestedNextSteps: string[];
+  limitations: string[];
+  modelIdentifier: string;
+  generatedAt: string;
+  isSimulated?: boolean;
+}
+
 

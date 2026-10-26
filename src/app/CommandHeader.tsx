@@ -270,6 +270,7 @@ export const CommandHeader: React.FC<CommandHeaderProps> = ({
           {/* User Identity & Role Badge / Switcher */}
           <div ref={roleMenuRef} style={{ position: 'relative' }}>
             <button
+              id="header-user-menu-btn"
               type="button"
               onClick={() => setIsRoleMenuOpen((prev) => !prev)}
               aria-haspopup="true"
@@ -287,10 +288,10 @@ export const CommandHeader: React.FC<CommandHeaderProps> = ({
                 fontWeight: 700,
                 cursor: 'pointer',
               }}
-              title="Current RBAC clearance role. Click to switch roles or log in."
+              title="Current user session & settings"
             >
               <Shield size={12} color="#00E5FF" />
-              <span>{currentUser?.callsign || currentUser?.role?.toUpperCase() || 'AUTH'}</span>
+              <span>{currentUser?.badgeName || currentUser?.callsign || currentUser?.role?.toUpperCase() || 'USER'}</span>
               <span
                 style={{
                   fontSize: '0.65rem',
@@ -315,44 +316,114 @@ export const CommandHeader: React.FC<CommandHeaderProps> = ({
                   border: '1px solid rgba(0, 229, 255, 0.3)',
                   borderRadius: '6px',
                   boxShadow: '0 8px 24px rgba(0, 0, 0, 0.6)',
-                  padding: '8px',
+                  padding: '10px',
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: '4px',
-                  minWidth: '220px',
+                  gap: '8px',
+                  minWidth: '240px',
                   zIndex: 200,
                 }}
               >
-                <div style={{ fontSize: '0.7rem', color: '#8D9A8F', padding: '2px 6px', fontWeight: 600 }}>
-                  Switch Operational Clearance
+                <div style={{ fontSize: '0.75rem', color: '#e9ece9', fontWeight: 700, borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '6px' }}>
+                  {currentUser?.badgeName || currentUser?.email}
+                  <div style={{ fontSize: '0.68rem', color: '#8D9A8F', fontWeight: 400 }}>
+                    {currentUser?.email} {currentUser?.regimentNo ? `• Reg ${currentUser.regimentNo}` : ''}
+                  </div>
                 </div>
-                {[
-                  { role: 'administrator' as UserRole, label: 'Administrator', desc: 'Full access & scenario controls' },
-                  { role: 'operations_officer' as UserRole, label: 'Operations Officer', desc: 'Incidents & SkyWatch' },
-                  { role: 'medical_officer' as UserRole, label: 'Medical Officer', desc: 'Triage & Soldier Vitals intake' },
-                  { role: 'read_only_viewer' as UserRole, label: 'Read-Only Viewer', desc: 'Observation only' },
-                ].map((item) => (
+
+                {/* Admin Approvals Link (only for approved administrator) */}
+                {currentUser?.role === 'administrator' && (
                   <button
-                    key={item.role}
+                    id="nav-admin-approvals-btn"
                     type="button"
-                    onClick={() => handleRoleSwitch(item.role)}
+                    onClick={() => {
+                      setIsRoleMenuOpen(false);
+                      window.location.hash = '#admin/approvals';
+                    }}
                     style={{
                       textAlign: 'left',
-                      padding: '6px 8px',
-                      background: currentUser?.role === item.role ? 'rgba(0, 229, 255, 0.15)' : 'transparent',
-                      border: currentUser?.role === item.role ? '1px solid #00E5FF' : '1px solid transparent',
+                      padding: '7px 10px',
+                      background: 'rgba(115, 138, 101, 0.2)',
+                      border: '1px solid rgba(115, 138, 101, 0.4)',
                       borderRadius: '4px',
-                      color: '#FFFFFF',
+                      color: '#738a65',
                       fontSize: '0.75rem',
+                      fontWeight: 700,
                       cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
                     }}
                   >
-                    <div style={{ fontWeight: 700, color: currentUser?.role === item.role ? '#00E5FF' : '#FFFFFF' }}>
-                      {item.label}
-                    </div>
-                    <div style={{ fontSize: '0.68rem', color: '#8D9A8F' }}>{item.desc}</div>
+                    <Shield size={13} />
+                    <span>Administrator Approvals</span>
                   </button>
-                ))}
+                )}
+
+                {/* Demo Switcher only visible in explicit demo session */}
+                {currentUser?.isDemo && (
+                  <>
+                    <div style={{ fontSize: '0.68rem', color: '#8D9A8F', padding: '2px 4px', fontWeight: 600 }}>
+                      Switch Demo Operational Role
+                    </div>
+                    {[
+                      { role: 'administrator' as UserRole, label: 'Administrator', desc: 'Full access & scenario controls' },
+                      { role: 'operations_officer' as UserRole, label: 'Operations Officer', desc: 'Incidents & SkyWatch' },
+                      { role: 'medical_officer' as UserRole, label: 'Medical Officer', desc: 'Triage & Soldier Vitals intake' },
+                      { role: 'read_only_viewer' as UserRole, label: 'Read-Only Viewer', desc: 'Observation only' },
+                    ].map((item) => (
+                      <button
+                        key={item.role}
+                        type="button"
+                        onClick={() => handleRoleSwitch(item.role)}
+                        style={{
+                          textAlign: 'left',
+                          padding: '5px 8px',
+                          background: currentUser?.role === item.role ? 'rgba(0, 229, 255, 0.15)' : 'transparent',
+                          border: currentUser?.role === item.role ? '1px solid #00E5FF' : '1px solid transparent',
+                          borderRadius: '4px',
+                          color: '#FFFFFF',
+                          fontSize: '0.72rem',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <div style={{ fontWeight: 700, color: currentUser?.role === item.role ? '#00E5FF' : '#FFFFFF' }}>
+                          {item.label}
+                        </div>
+                      </button>
+                    ))}
+                  </>
+                )}
+
+                {/* Actual Logout Button */}
+                <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '6px' }}>
+                  <button
+                    id="header-logout-btn"
+                    type="button"
+                    onClick={async () => {
+                      setIsRoleMenuOpen(false);
+                      await authService.logout();
+                    }}
+                    style={{
+                      width: '100%',
+                      textAlign: 'left',
+                      padding: '7px 10px',
+                      background: 'rgba(200, 90, 83, 0.15)',
+                      border: '1px solid rgba(200, 90, 83, 0.35)',
+                      borderRadius: '4px',
+                      color: '#c85a53',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                    }}
+                  >
+                    <RotateCcw size={13} />
+                    <span>Log Out</span>
+                  </button>
+                </div>
               </div>
             )}
           </div>

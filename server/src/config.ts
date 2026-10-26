@@ -15,6 +15,10 @@ export interface ServerConfig {
   enableAutoTelemetry: boolean;
   supabaseUrl?: string;
   supabaseServiceRoleKey?: string;
+  geminiApiKey: string;
+  geminiModel: string;
+  enableDemoAuth: boolean;
+  disableTestFallback: boolean;
 }
 
 function resolveStorageMode(): 'supabase' | 'file' | 'memory' {
@@ -40,4 +44,9 @@ export const config: ServerConfig = {
   enableAutoTelemetry: process.env.ENABLE_AUTO_TELEMETRY !== 'false',
   supabaseUrl: process.env.SUPABASE_URL || 'https://cajrbzfsfsimxweomrlt.supabase.co',
   supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY || '',
+  geminiApiKey: process.env.GEMINI_API_KEY || '',
+  geminiModel: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
+  enableDemoAuth: process.env.ENABLE_DEMO_AUTH !== 'false',
+  disableTestFallback: process.env.DISABLE_TEST_FALLBACK === 'true',
 };
+

@@ -13,6 +13,7 @@ import {
 import { SoldierProfile, SoldierVitalsRecord } from '@shared/types';
 import { api } from '../../services/api/apiClient';
 import { authService } from '../../services/auth/authService';
+import { ActivityRiskPanel } from './components/ActivityRiskPanel';
 
 export const SoldierVitalsModule: React.FC = () => {
   const [soldiers, setSoldiers] = useState<SoldierProfile[]>([]);
@@ -320,11 +321,19 @@ export const SoldierVitalsModule: React.FC = () => {
               >
                 <div>
                   <h3 style={{ margin: 0, fontSize: '1.05rem', color: 'var(--text-primary, #e9ece9)', fontWeight: 800, fontFamily: 'var(--font-heading)' }}>
-                    {selectedSoldier.callsign}
+                    {selectedSoldier.callsign} {selectedSoldier.badgeName ? `(${selectedSoldier.badgeName})` : ''}
                   </h3>
                   <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary, #94a192)', fontFamily: 'var(--font-mono)' }}>
-                    {selectedSoldier.id} &bull; {selectedSoldier.unit}
+                    {selectedSoldier.id} &bull; {selectedSoldier.unit} {selectedSoldier.regimentNo ? `&bull; Reg #${selectedSoldier.regimentNo}` : ''}
                   </span>
+                  {(selectedSoldier.heightCm || selectedSoldier.weightKg || selectedSoldier.ageYears) && (
+                    <div style={{ fontSize: '0.7rem', color: 'var(--accent-sage, #738a65)', marginTop: '4px', fontFamily: 'var(--font-mono)' }}>
+                      {selectedSoldier.heightCm ? `Ht: ${selectedSoldier.heightCm}cm ` : ''}
+                      {selectedSoldier.weightKg ? `| Wt: ${selectedSoldier.weightKg}kg ` : ''}
+                      {selectedSoldier.ageYears ? `| Age: ${selectedSoldier.ageYears}y` : ''}
+                      {selectedSoldier.approvalStatus ? ` | Status: ${selectedSoldier.approvalStatus.toUpperCase()}` : ''}
+                    </div>
+                  )}
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontSize: '0.68rem', color: 'var(--text-muted, #667564)', fontFamily: 'var(--font-mono)' }}>Readings Count</div>
@@ -481,6 +490,9 @@ export const SoldierVitalsModule: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* 4. Activity Workload & Gemini Advisory Risk Analysis */}
+      <ActivityRiskPanel soldier={selectedSoldier} />
     </div>
   );
 };

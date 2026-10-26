@@ -11,8 +11,19 @@ const MEDICAL_OVERSIGHT_DISCLAIMER =
   'For operational tracking and situational monitoring under qualified medical oversight. Not an automated diagnostic instrument.';
 
 // 1. Get permitted soldiers roster
-soldierVitalsRouter.get('/soldiers', (_req: AuthenticatedRequest, res: Response) => {
-  const soldiers = soldierVitalsService.listSoldiers();
+soldierVitalsRouter.get('/soldiers', (req: AuthenticatedRequest, res: Response) => {
+  let soldiers = soldierVitalsService.listSoldiers();
+  const currentUser = req.user;
+
+  // Personal record privacy: non-clinical staff/viewers only see their own soldier profile
+  if (currentUser && currentUser.role !== 'administrator' && currentUser.role !== 'medical_officer') {
+    if (currentUser.soldierId) {
+      soldiers = soldiers.filter((s) => s.id === currentUser.soldierId);
+    } else {
+      soldiers = [];
+    }
+  }
+
   res.status(200).json({
     success: true,
     data: soldiers,
@@ -28,7 +39,27 @@ soldierVitalsRouter.get('/soldiers', (_req: AuthenticatedRequest, res: Response)
 // 2. Get vitals records (all or by soldier query)
 soldierVitalsRouter.get('/', (req: AuthenticatedRequest, res: Response) => {
   const { soldierId } = req.query;
-  const list = soldierVitalsService.listVitals(typeof soldierId === 'string' ? soldierId : undefined);
+  const currentUser = req.user;
+
+  // Privacy check: viewers can only inspect their own records
+  if (currentUser && currentUser.role !== 'administrator' && currentUser.role !== 'medical_officer') {
+    if (!currentUser.soldierId || (soldierId && soldierId !== currentUser.soldierId)) {
+      res.status(403).json({
+        success: false,
+        error: {
+          code: ERROR_CODES.FORBIDDEN,
+          message: 'Access denied: You can only inspect your own physiological health records.',
+        },
+      });
+      return;
+    }
+  }
+
+  const targetSoldierId = (currentUser && currentUser.role !== 'administrator' && currentUser.role !== 'medical_officer')
+    ? currentUser.soldierId
+    : typeof soldierId === 'string' ? soldierId : undefined;
+
+  const list = soldierVitalsService.listVitals(targetSoldierId);
 
   res.status(200).json({
     success: true,
@@ -44,6 +75,20 @@ soldierVitalsRouter.get('/', (req: AuthenticatedRequest, res: Response) => {
 
 // 3. Get history for a specific soldier
 soldierVitalsRouter.get('/:soldierId', (req: AuthenticatedRequest, res: Response) => {
+  const currentUser = req.user;
+  if (currentUser && currentUser.role !== 'administrator' && currentUser.role !== 'medical_officer') {
+    if (!currentUser.soldierId || currentUser.soldierId !== req.params.soldierId) {
+      res.status(403).json({
+        success: false,
+        error: {
+          code: ERROR_CODES.FORBIDDEN,
+          message: 'Access denied: You can only inspect your own physiological health records.',
+        },
+      });
+      return;
+    }
+  }
+
   const soldier = soldierVitalsService.getSoldierById(req.params.soldierId);
   if (!soldier) {
     res.status(404).json({
