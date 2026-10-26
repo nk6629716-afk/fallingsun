@@ -125,8 +125,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
       sourceModule: 'fieldlink',
       type: 'medical',
       priority: 'critical',
-      title: 'CAS-0419: Severe Abdominal Penetrating Trauma',
-      notes: 'Hemodynamic compromise (BP: 82/50, HR: 128 bpm). Rule 4 START Immediate. Priority Evac to Field Hospital Alpha.',
+      title: 'SOL-001 (Aarav): Critical Blast Hypoxemia',
+      notes: 'Hemodynamic compromise (BP: 88/54, HR: 136 bpm, SpO2: 88%). Rule 4 START Immediate. Priority Evac to Field Hospital Alpha.',
       location: { name: 'Forward Aid Station Bravo', lat: 34.065, lng: -118.238 },
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -140,11 +140,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
     return [
       {
         id: 'MED-ALT-1',
-        trackId: 'CAS-0419',
-        trackCallsign: 'CAS-0419 (Immediate)',
+        trackId: 'SOL-001',
+        trackCallsign: 'SOL-001 (Aarav)',
         ruleName: 'speed_anomaly',
         severity: 'critical',
-        observedValue: 'HR: 128 bpm',
+        observedValue: 'HR: 136 bpm, SpO2: 88%',
         threshold: 'HR > 100 bpm',
         explanation: 'START Triage Immediate: Hemodynamic shock detected. Priority medevac via AMB-02.',
         timestamp: new Date().toISOString(),
@@ -183,10 +183,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
   // Medical Triage & Evacuation Priority Queue
   const medicalTriageQueue = useMemo<ThreatItemData[]>(() => {
     const baseTrack: TelemetryTrack = {
-      id: 'CAS-0419',
-      callsign: 'CAS-0419 (Immediate - Shock)',
-      lat: 34.065,
-      lng: -118.238,
+      id: 'SOL-001',
+      callsign: 'SOL-001 (Aarav)',
+      lat: 34.072,
+      lng: -118.225,
       altitude: 0,
       speed: 0,
       heading: 0,
@@ -199,28 +199,28 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
     return [
       {
-        id: 'CAS-0419',
-        callsign: 'CAS-0419 (Immediate - Shock)',
-        reason: 'Hemodynamic compromise (BP 82/50, HR 128). ALS Evac to Hospital Alpha.',
+        id: 'SOL-001',
+        callsign: 'SOL-001 (Aarav)',
+        reason: 'Hemodynamic compromise (BP 88/54, HR 136, SpO2 88%). ALS Evac to Hospital Alpha.',
         score: 95,
         severity: 'critical',
         track: {
           ...baseTrack,
-          id: 'CAS-0419',
-          callsign: 'CAS-0419 (Sgt Vance)',
+          id: 'SOL-001',
+          callsign: 'SOL-001 (Aarav)',
           threatScore: 95,
         },
       },
       {
-        id: 'CAS-0420',
-        callsign: 'CAS-0420 (Immediate - Chest)',
-        reason: 'Tension pneumothorax (SpO2 91%, RR 28). Immediate needle decompression needed.',
+        id: 'SOL-004',
+        callsign: 'SOL-004 (Diya)',
+        reason: 'Junctional hemorrhage (HR 142 bpm, BP 82/50, 35.2°C). Hemostatic gauze applied.',
         score: 88,
         severity: 'critical',
         track: {
           ...baseTrack,
-          id: 'CAS-0420',
-          callsign: 'CAS-0420 (Cpl Chen)',
+          id: 'SOL-004',
+          callsign: 'SOL-004 (Diya)',
           threatScore: 88,
         },
       },
@@ -238,15 +238,15 @@ export const Dashboard: React.FC<DashboardProps> = ({
         },
       },
       {
-        id: 'CAS-0421',
-        callsign: 'CAS-0421 (Delayed - Fracture)',
-        reason: 'Compound tibia fracture. Vitals stable. Delayed holding.',
+        id: 'SOL-002',
+        callsign: 'SOL-002 (Aditi)',
+        reason: 'Compound tibia fracture. Vitals stable (HR 86, SpO2 96%). Delayed holding.',
         score: 35,
         severity: 'low',
         track: {
           ...baseTrack,
-          id: 'CAS-0421',
-          callsign: 'CAS-0421 (Spc Okafor)',
+          id: 'SOL-002',
+          callsign: 'SOL-002 (Aditi)',
           threatScore: 35,
           status: 'tracking',
         },
@@ -299,7 +299,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   // Medical Activity ticker
   const latestActivity = useMemo(() => {
-    return `Medevac Dispatch: AMB-02 en route to Field Hospital Alpha with CAS-0419 (Immediate) — ETA ${formatDurationMinutes(11)}`;
+    return `Medevac Dispatch: AMB-02 en route to Field Hospital Alpha with SOL-001 (Aarav) — ETA ${formatDurationMinutes(11)}`;
   }, []);
 
   // Top-Left Metrics Panel (Medical Telemetry for COP Map)

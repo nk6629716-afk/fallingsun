@@ -4,38 +4,23 @@ import {
   Heart,
   Thermometer,
   Wind,
-  ShieldCheck,
   Search,
-  PlusCircle,
-  AlertTriangle,
   Clock,
   UserCheck,
   Lock,
   RefreshCw,
 } from 'lucide-react';
-import { SoldierProfile, SoldierVitalsRecord, CreateSoldierVitalsInput } from '@shared/types';
+import { SoldierProfile, SoldierVitalsRecord } from '@shared/types';
 import { api } from '../../services/api/apiClient';
 import { authService } from '../../services/auth/authService';
 
 export const SoldierVitalsModule: React.FC = () => {
   const [soldiers, setSoldiers] = useState<SoldierProfile[]>([]);
-  const [selectedSoldierId, setSelectedSoldierId] = useState<string>('CAS-0419');
+  const [selectedSoldierId, setSelectedSoldierId] = useState<string>('SOL-001');
   const [vitalsHistory, setVitalsHistory] = useState<SoldierVitalsRecord[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-
-  // Form State initialized to match the detected operational anomaly
-  const [heartRate, setHeartRate] = useState<string>('136');
-  const [bpSystolic, setBpSystolic] = useState<string>('88');
-  const [bpDiastolic, setBpDiastolic] = useState<string>('54');
-  const [temperature, setTemperature] = useState<string>('37.8');
-  const [oxygenSaturation, setOxygenSaturation] = useState<string>('88');
-  const [respiratoryRate, setRespiratoryRate] = useState<string>('34');
-  const [clinicalNotes, setClinicalNotes] = useState<string>(
-    'SpO2 dropped to 88% and RR increased to 34/min. Triage level escalated to Immediate (Red).'
-  );
 
   // Role permissions
   const currentUser = authService.getUser();
@@ -62,16 +47,6 @@ export const SoldierVitalsModule: React.FC = () => {
     try {
       const records = await api.getSoldierVitals(soldierId);
       setVitalsHistory(records);
-      if (records.length > 0) {
-        const latest = records[0];
-        if (latest.heartRateBpm) setHeartRate(String(latest.heartRateBpm));
-        if (latest.bloodPressureSystolic) setBpSystolic(String(latest.bloodPressureSystolic));
-        if (latest.bloodPressureDiastolic) setBpDiastolic(String(latest.bloodPressureDiastolic));
-        if (latest.temperatureCelsius) setTemperature(String(latest.temperatureCelsius));
-        if (latest.oxygenSaturationPct) setOxygenSaturation(String(latest.oxygenSaturationPct));
-        if (latest.respiratoryRateBpm) setRespiratoryRate(String(latest.respiratoryRateBpm));
-        if (latest.clinicalNotes) setClinicalNotes(latest.clinicalNotes);
-      }
     } catch (err: any) {
       console.warn('[SoldierVitals] History fetch error:', err);
     }
@@ -103,50 +78,7 @@ export const SoldierVitalsModule: React.FC = () => {
     [soldiers, selectedSoldierId]
   );
 
-  const handleSubmitVitals = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedSoldierId) return;
 
-    if (!canRecordVitals) {
-      setFeedbackMessage({
-        type: 'error',
-        text: 'Access Denied: Requires Medical Officer or Administrator role clearance.',
-      });
-      return;
-    }
-
-    setIsSubmitting(true);
-    setFeedbackMessage(null);
-
-    try {
-      const payload: CreateSoldierVitalsInput = {
-        soldierId: selectedSoldierId,
-        heartRateBpm: heartRate ? Number(heartRate) : undefined,
-        bloodPressureSystolic: bpSystolic ? Number(bpSystolic) : undefined,
-        bloodPressureDiastolic: bpDiastolic ? Number(bpDiastolic) : undefined,
-        temperatureCelsius: temperature ? Number(temperature) : undefined,
-        oxygenSaturationPct: oxygenSaturation ? Number(oxygenSaturation) : undefined,
-        respiratoryRateBpm: respiratoryRate ? Number(respiratoryRate) : undefined,
-        clinicalNotes: clinicalNotes.trim() || undefined,
-        timestamp: new Date().toISOString(),
-      };
-
-      const saved = await api.recordSoldierVitals(payload);
-      setVitalsHistory((prev) => [saved, ...prev]);
-      setFeedbackMessage({
-        type: 'success',
-        text: `Vitals recorded for ${selectedSoldier?.callsign || selectedSoldierId} at ${new Date().toLocaleTimeString()}.`,
-      });
-      setClinicalNotes('');
-    } catch (err: any) {
-      setFeedbackMessage({
-        type: 'error',
-        text: err.message || 'Failed to submit vitals measurement.',
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   return (
     <div
@@ -255,11 +187,11 @@ export const SoldierVitalsModule: React.FC = () => {
         </div>
       )}
 
-      {/* 3. Main Split View: Left Roster / Center History / Right Entry Form */}
+      {/* 2. Main Split View: Left Roster / Right Telemetry History */}
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+          gridTemplateColumns: 'minmax(280px, 340px) 1fr',
           gap: '16px',
           alignItems: 'start',
         }}
@@ -447,6 +379,15 @@ export const SoldierVitalsModule: React.FC = () => {
                       {vitalsHistory[0].oxygenSaturationPct ?? '--'} <span style={{ fontSize: '0.68rem', color: 'var(--text-muted, #667564)' }}>%</span>
                     </div>
                   </div>
+
+                  <div style={{ background: 'var(--bg-elevated, #1f2622)', padding: '10px', borderRadius: '4px', border: '1px solid var(--border-grid, rgba(115, 138, 101, 0.15))' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.68rem', color: 'var(--accent-sage, #738a65)', fontFamily: 'var(--font-mono)' }}>
+                      <Wind size={12} /> Resp Rate
+                    </div>
+                    <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary, #e9ece9)', marginTop: '4px', fontFamily: 'var(--font-mono)' }}>
+                      {vitalsHistory[0].respiratoryRateBpm ?? '--'} <span style={{ fontSize: '0.68rem', color: 'var(--text-muted, #667564)' }}>br/min</span>
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -468,7 +409,7 @@ export const SoldierVitalsModule: React.FC = () => {
                       fontFamily: 'var(--font-mono)',
                     }}
                   >
-                    No physiological measurement logs on file for this soldier. Use the intake form to record baseline vitals.
+                    No physiological measurement logs on file for this soldier.
                   </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '420px', overflowY: 'auto' }}>
@@ -537,267 +478,6 @@ export const SoldierVitalsModule: React.FC = () => {
             <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted, #667564)', fontFamily: 'var(--font-mono)', fontSize: '0.8rem' }}>
               Select a soldier from the roster
             </div>
-          )}
-        </div>
-
-        {/* Column C: Validated Entry Form */}
-        <div
-          style={{
-            background: 'var(--bg-card, #181d1a)',
-            border: '1px solid var(--border-card, rgba(115, 138, 101, 0.20))',
-            borderRadius: 'var(--radius-sm, 6px)',
-            padding: '16px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '12px',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <PlusCircle size={16} color="var(--accent-sage, #738a65)" />
-            <h3 style={{ margin: 0, fontSize: '0.92rem', color: 'var(--text-primary, #e9ece9)', fontWeight: 700, fontFamily: 'var(--font-heading)' }}>
-              Record Vitals Intake
-            </h3>
-          </div>
-
-          {!canRecordVitals ? (
-            <div
-              style={{
-                padding: '14px',
-                background: 'rgba(212, 163, 115, 0.15)',
-                border: '1px solid rgba(212, 163, 115, 0.35)',
-                borderRadius: '4px',
-                fontSize: '0.75rem',
-                color: 'var(--status-warning, #d4a373)',
-                fontFamily: 'var(--font-mono)',
-              }}
-            >
-              <Lock size={15} style={{ marginBottom: '6px' }} />
-              <div>
-                <strong>Read-Only Access:</strong> You are currently authenticated as <em>{currentUser?.role || 'Viewer'}</em>.
-                Recording new physiological measurements requires <strong>Medical Officer</strong> or <strong>Administrator</strong> clearance.
-              </div>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmitVitals} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-secondary, #94a192)', marginBottom: '4px', fontFamily: 'var(--font-mono)' }}>
-                  Target Soldier
-                </label>
-                <select
-                  value={selectedSoldierId}
-                  onChange={(e) => setSelectedSoldierId(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '6px 8px',
-                    background: 'var(--bg-control, #161c18)',
-                    border: '1px solid var(--border-tactical, rgba(115, 138, 101, 0.20))',
-                    borderRadius: '4px',
-                    color: 'var(--text-primary, #e9ece9)',
-                    fontSize: '0.75rem',
-                    fontFamily: 'var(--font-mono)',
-                  }}
-                >
-                  {soldiers.map((s) => (
-                    <option key={s.id} value={s.id} style={{ background: '#161c18', color: '#e9ece9' }}>
-                      {s.callsign} ({s.id})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-secondary, #94a192)', marginBottom: '4px', fontFamily: 'var(--font-mono)' }}>
-                    Heart Rate (BPM)
-                  </label>
-                  <input
-                    type="number"
-                    min="30"
-                    max="250"
-                    value={heartRate}
-                    onChange={(e) => setHeartRate(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '6px 8px',
-                      background: 'var(--bg-control, #161c18)',
-                      border: '1px solid var(--border-tactical, rgba(115, 138, 101, 0.20))',
-                      borderRadius: '4px',
-                      color: 'var(--text-primary, #e9ece9)',
-                      fontSize: '0.78rem',
-                      fontFamily: 'var(--font-mono)',
-                    }}
-                  />
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-secondary, #94a192)', marginBottom: '4px', fontFamily: 'var(--font-mono)' }}>
-                    SpO₂ Saturation (%)
-                  </label>
-                  <input
-                    type="number"
-                    min="50"
-                    max="100"
-                    value={oxygenSaturation}
-                    onChange={(e) => setOxygenSaturation(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '6px 8px',
-                      background: 'var(--bg-control, #161c18)',
-                      border: '1px solid var(--border-tactical, rgba(115, 138, 101, 0.20))',
-                      borderRadius: '4px',
-                      color: 'var(--text-primary, #e9ece9)',
-                      fontSize: '0.78rem',
-                      fontFamily: 'var(--font-mono)',
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-secondary, #94a192)', marginBottom: '4px', fontFamily: 'var(--font-mono)' }}>
-                    BP Systolic (mmHg)
-                  </label>
-                  <input
-                    type="number"
-                    min="50"
-                    max="260"
-                    value={bpSystolic}
-                    onChange={(e) => setBpSystolic(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '6px 8px',
-                      background: 'var(--bg-control, #161c18)',
-                      border: '1px solid var(--border-tactical, rgba(115, 138, 101, 0.20))',
-                      borderRadius: '4px',
-                      color: 'var(--text-primary, #e9ece9)',
-                      fontSize: '0.78rem',
-                      fontFamily: 'var(--font-mono)',
-                    }}
-                  />
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-secondary, #94a192)', marginBottom: '4px', fontFamily: 'var(--font-mono)' }}>
-                    BP Diastolic (mmHg)
-                  </label>
-                  <input
-                    type="number"
-                    min="30"
-                    max="160"
-                    value={bpDiastolic}
-                    onChange={(e) => setBpDiastolic(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '6px 8px',
-                      background: 'var(--bg-control, #161c18)',
-                      border: '1px solid var(--border-tactical, rgba(115, 138, 101, 0.20))',
-                      borderRadius: '4px',
-                      color: 'var(--text-primary, #e9ece9)',
-                      fontSize: '0.78rem',
-                      fontFamily: 'var(--font-mono)',
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-secondary, #94a192)', marginBottom: '4px', fontFamily: 'var(--font-mono)' }}>
-                    Body Temp (°C)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    min="30"
-                    max="45"
-                    value={temperature}
-                    onChange={(e) => setTemperature(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '6px 8px',
-                      background: 'var(--bg-control, #161c18)',
-                      border: '1px solid var(--border-tactical, rgba(115, 138, 101, 0.20))',
-                      borderRadius: '4px',
-                      color: 'var(--text-primary, #e9ece9)',
-                      fontSize: '0.78rem',
-                      fontFamily: 'var(--font-mono)',
-                    }}
-                  />
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-secondary, #94a192)', marginBottom: '4px', fontFamily: 'var(--font-mono)' }}>
-                    Resp Rate (br/min)
-                  </label>
-                  <input
-                    type="number"
-                    min="4"
-                    max="60"
-                    value={respiratoryRate}
-                    onChange={(e) => setRespiratoryRate(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '6px 8px',
-                      background: 'var(--bg-control, #161c18)',
-                      border: '1px solid var(--border-tactical, rgba(115, 138, 101, 0.20))',
-                      borderRadius: '4px',
-                      color: 'var(--text-primary, #e9ece9)',
-                      fontSize: '0.78rem',
-                      fontFamily: 'var(--font-mono)',
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-secondary, #94a192)', marginBottom: '4px', fontFamily: 'var(--font-mono)' }}>
-                  Clinical Assessment / Notes
-                </label>
-                <textarea
-                  rows={3}
-                  value={clinicalNotes}
-                  onChange={(e) => setClinicalNotes(e.target.value)}
-                  placeholder="Record objective observations..."
-                  style={{
-                    width: '100%',
-                    padding: '6px 8px',
-                    background: 'var(--bg-control, #161c18)',
-                    border: '1px solid var(--border-tactical, rgba(115, 138, 101, 0.20))',
-                    borderRadius: '4px',
-                    color: 'var(--text-primary, #e9ece9)',
-                    fontSize: '0.75rem',
-                    resize: 'vertical',
-                    fontFamily: 'var(--font-mono)',
-                  }}
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                style={{
-                  marginTop: '6px',
-                  padding: '8px 12px',
-                  background: isSubmitting ? 'var(--bg-control, #161c18)' : 'var(--accent-sage, #738a65)',
-                  color: isSubmitting ? 'var(--text-muted, #667564)' : '#0e1210',
-                  border: isSubmitting ? '1px solid var(--border-tactical, rgba(115, 138, 101, 0.20))' : 'none',
-                  borderRadius: '4px',
-                  fontWeight: 700,
-                  fontSize: '0.78rem',
-                  cursor: isSubmitting ? 'wait' : 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '6px',
-                  fontFamily: 'var(--font-mono)',
-                  transition: 'opacity 0.15s ease',
-                }}
-              >
-                <ShieldCheck size={14} />
-                <span>{isSubmitting ? 'Submitting to Supabase...' : 'Save Vitals Entry'}</span>
-              </button>
-            </form>
           )}
         </div>
       </div>
