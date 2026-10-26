@@ -945,7 +945,7 @@ export class SentinelApiClient {
 
     // Local resilient store & merge
     const newRecord: SoldierVitalsRecord = {
-      id: `VTL-${Date.now()}`,
+      id: `REC-${Date.now()}`,
       soldierId: input.soldierId,
       callsign: input.soldierId,
       unit: 'Operational Detachment',

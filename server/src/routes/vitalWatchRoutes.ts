@@ -344,6 +344,16 @@ authRouter.patch('/users/:id/approve', (req: Request, res: Response) => {
 
   // Also auto-create or update Personnel Profile if approved
   if (status === 'approved') {
+    const reg = db.getRegistrationByEmail(updated.email);
+    if (reg) {
+      db.saveRegistration({
+        ...reg,
+        approvalStatus: 'approved',
+        reviewedAt: new Date().toISOString(),
+        reviewedBy: approvedBy || 'ADMIN',
+        decisionReason: 'Approved via VitalWatch',
+      });
+    }
     const existingPers = db.getPersonnelById(updated.id);
     if (!existingPers) {
       db.savePersonnel({

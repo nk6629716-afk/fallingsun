@@ -1,12 +1,12 @@
 /**
- * SENTINEL Frontend Supabase Authentication & Session Service
- * Handles user sign-in, token storage, role resolution, and session persistence.
- * Uses VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY when configured.
- * Never exposes Supabase Service Role Key to client bundles.
+ * SENTINEL Frontend Authentication & Session Authority Service
+ * Handles user sign-in, signup, token storage, approval verification, and session persistence.
+ * Enforces single session authority with verified server state restoration.
+ * Never defaults to demo administrator without explicit demo action.
  */
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { UserRole, UserProfile, AuthSession } from '@shared/types';
+import { UserRole, UserProfile, AuthSession, ApprovalStatus } from '@shared/types';
 
 const STORAGE_KEY = 'sentinel_auth_session';
 
@@ -29,14 +29,27 @@ if (supabaseUrl && supabaseAnonKey && supabaseAnonKey.trim().length > 0) {
   }
 }
 
+export interface SignupInput {
+  email: string;
+  password: string;
+  confirmPassword?: string;
+  badgeName: string;
+  regimentNo: string;
+  heightCm: number;
+  weightKg: number;
+  ageYears: number;
+}
+
 export type AuthListener = (session: AuthSession | null) => void;
 
 class AuthService {
   private currentSession: AuthSession | null = null;
   private listeners: Set<AuthListener> = new Set();
+  private isDemoEnabled: boolean = true;
 
   constructor() {
     this.restoreSession();
+    this.initSupabaseListener();
   }
 
   private restoreSession(): void {
@@ -45,23 +58,25 @@ class AuthService {
       if (stored) {
         this.currentSession = JSON.parse(stored);
       } else {
-        // Default to demo administrator for out-of-the-box local evaluation
-        this.currentSession = {
-          token: 'dev-admin-token',
-          user: {
-            id: 'usr-admin-demo',
-            name: 'Cmdr. Demo Administrator',
-            email: 'admin@sentinel.mil',
-            role: 'administrator',
-            status: 'approved',
-            createdAt: '2026-10-25T00:00:00.000Z',
-            callsign: 'COMMAND-1',
-            unit: 'HQ Command Element',
-          },
-        };
+        // Do not auto-login as admin in real authentication mode
+        this.currentSession = null;
       }
     } catch {
       this.currentSession = null;
+    }
+  }
+
+  private initSupabaseListener(): void {
+    if (clientInstance) {
+      clientInstance.auth.onAuthStateChange(async (_event, session) => {
+        if (session) {
+          await this.refreshSession();
+        } else if (this.currentSession && !this.currentSession.user?.isDemo) {
+          this.currentSession = null;
+          localStorage.removeItem(STORAGE_KEY);
+          this.notify();
+        }
+      });
     }
   }
 
@@ -81,8 +96,28 @@ class AuthService {
     return this.currentSession?.user?.role || 'read_only_viewer';
   }
 
+  public getApprovalStatus(): ApprovalStatus {
+    return this.currentSession?.user?.approvalStatus || 'pending';
+  }
+
   public isAuthenticated(): boolean {
     return Boolean(this.currentSession?.token);
+  }
+
+  public isApproved(): boolean {
+    return this.isAuthenticated() && this.getApprovalStatus() === 'approved';
+  }
+
+  public isPending(): boolean {
+    return this.isAuthenticated() && this.getApprovalStatus() === 'pending';
+  }
+
+  public isRejected(): boolean {
+    return this.isAuthenticated() && this.getApprovalStatus() === 'rejected';
+  }
+
+  public isSuspended(): boolean {
+    return this.isAuthenticated() && this.getApprovalStatus() === 'suspended';
   }
 
   public hasRole(requiredRoles: UserRole[]): boolean {
@@ -91,39 +126,7 @@ class AuthService {
   }
 
   public async loginWithSupabase(email: string, password: string): Promise<AuthSession> {
-    if (clientInstance) {
-      const { data, error } = await clientInstance.auth.signInWithPassword({
-        email,
-        password,
-      });
 
-      if (error || !data.session) {
-        throw new Error(error?.message || 'Authentication failed');
-      }
-
-      const role: UserRole =
-        data.user.app_metadata?.role || data.user.user_metadata?.role || 'read_only_viewer';
-
-      const session: AuthSession = {
-        token: data.session.access_token,
-        expiresAt: data.session.expires_at,
-        user: {
-          id: data.user.id,
-          name: data.user.user_metadata?.name || data.user.email?.split('@')[0] || 'Operator',
-          email: data.user.email || email,
-          role,
-          status: 'approved',
-          createdAt: data.user.created_at || new Date().toISOString(),
-          callsign: data.user.user_metadata?.callsign,
-          unit: data.user.user_metadata?.unit,
-        },
-      };
-
-      this.setSession(session);
-      return session;
-    }
-
-    // Backend proxy fallback
     const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -138,6 +141,59 @@ class AuthService {
     const session: AuthSession = json.data;
     this.setSession(session);
     return session;
+  }
+
+  public async signup(input: SignupInput): Promise<AuthSession> {
+    const res = await fetch('/api/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(input),
+    });
+
+    const json = await res.json();
+    if (!res.ok || !json.success) {
+      throw new Error(json.error?.message || 'Registration failed');
+    }
+
+    const session: AuthSession = {
+      token: json.data.token,
+      user: json.data.user,
+    };
+
+    this.setSession(session);
+    return session;
+  }
+
+  public async refreshSession(): Promise<AuthSession | null> {
+    const token = this.getToken();
+    if (!token) return null;
+
+    try {
+      const res = await fetch('/api/auth/me', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) {
+        if (res.status === 401) {
+          this.logout();
+        }
+        return null;
+      }
+
+      const json = await res.json();
+      if (json.success && json.data?.user) {
+        const updatedSession: AuthSession = {
+          token,
+          user: json.data.user,
+        };
+        this.setSession(updatedSession);
+        return updatedSession;
+      }
+    } catch (err) {
+      console.warn('[AuthService] Failed to refresh session from /api/auth/me:', err);
+    }
+
+    return this.currentSession;
   }
 
   public demoLogin(role: UserRole): AuthSession {
@@ -156,6 +212,7 @@ class AuthService {
       email: `${role.replace('_', '.')}@sentinel.mil`,
       role,
       status: 'approved',
+      approvalStatus: 'approved',
       createdAt: '2026-10-25T00:00:00.000Z',
       callsign:
         role === 'administrator'
@@ -166,6 +223,7 @@ class AuthService {
           ? 'MEDEVAC-LEAD'
           : 'OBSERVER-SIT',
       unit: role === 'medical_officer' ? 'Forward Triage & Health Monitoring' : 'Field Operations Group',
+      isDemo: true,
     };
 
     const session: AuthSession = {
@@ -177,13 +235,24 @@ class AuthService {
     return session;
   }
 
-  public logout(): void {
+  public async logout(): Promise<void> {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
+    } catch {}
+
     if (clientInstance) {
-      clientInstance.auth.signOut().catch(() => {});
+      try {
+        await clientInstance.auth.signOut();
+      } catch {}
     }
+
     this.currentSession = null;
     localStorage.removeItem(STORAGE_KEY);
     this.notify();
+
+    if (typeof window !== 'undefined') {
+      window.location.hash = '#login';
+    }
   }
 
   private setSession(session: AuthSession): void {

@@ -281,7 +281,7 @@ export const MedicalOverviewTab: React.FC<MedicalOverviewTabProps> = ({
             </button>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
             {/* Immediate Red */}
             <div
               onClick={() => onNavigateTab('triage')}
@@ -344,27 +344,6 @@ export const MedicalOverviewTab: React.FC<MedicalOverviewTabProps> = ({
               </div>
               <div style={{ fontSize: '0.62rem', color: 'var(--text-secondary, #94a192)' }}>Minor</div>
             </div>
-
-            {/* Expectant Black */}
-            <div
-              onClick={() => onNavigateTab('triage')}
-              style={{
-                background: 'rgba(102, 117, 100, 0.15)',
-                border: '1px solid rgba(102, 117, 100, 0.35)',
-                borderRadius: '4px',
-                padding: '10px 8px',
-                textAlign: 'center',
-                cursor: 'pointer',
-              }}
-            >
-              <div style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--text-muted, #667564)', textTransform: 'uppercase', fontFamily: 'var(--font-mono)' }}>
-                Expectant
-              </div>
-              <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-primary, #e9ece9)', margin: '4px 0', fontFamily: 'var(--font-mono)' }}>
-                {expectantCount}
-              </div>
-              <div style={{ fontSize: '0.62rem', color: 'var(--text-muted, #667564)' }}>Palliative</div>
-            </div>
           </div>
 
           {/* Quick casualty list snapshot */}
@@ -372,12 +351,12 @@ export const MedicalOverviewTab: React.FC<MedicalOverviewTabProps> = ({
             <div style={{ fontSize: '0.68rem', fontWeight: 600, color: 'var(--text-secondary, #94a192)', textTransform: 'uppercase', fontFamily: 'var(--font-mono)' }}>
               High-Priority Monitored Casualties
             </div>
-            {casualties.slice(0, 3).map((casualty) => (
+            {casualties.map((casualty) => (
               <div
                 key={casualty.id}
                 onClick={() => {
                   if (onSelectCasualty) onSelectCasualty(casualty.id);
-                  onNavigateTab('monitoring', casualty.id);
+                  onNavigateTab('triage', casualty.id);
                 }}
                 style={{
                   display: 'flex',

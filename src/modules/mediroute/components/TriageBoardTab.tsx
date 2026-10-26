@@ -341,70 +341,6 @@ export const TriageBoardTab: React.FC<TriageBoardTabProps> = ({
             )}
           </div>
         </div>
-
-        {/* BLACK: Expectant */}
-        <div
-          style={{
-            background: 'var(--bg-card, #181d1a)',
-            borderTop: '3px solid var(--text-muted, #667564)',
-            border: '1px solid var(--border-card, rgba(115, 138, 101, 0.20))',
-            borderTopWidth: '3px',
-            borderRadius: 'var(--radius-sm, 6px)',
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'hidden',
-          }}
-        >
-          <div
-            style={{
-              padding: '10px 14px',
-              borderBottom: '1px solid var(--border-grid, rgba(115, 138, 101, 0.12))',
-              background: 'rgba(102, 117, 100, 0.08)',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
-            <div>
-              <div style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--text-muted, #667564)', letterSpacing: '0.05em', fontFamily: 'var(--font-mono)' }}>
-                BLACK &bull; EXPECTANT
-              </div>
-              <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary, #94a192)' }}>
-                Palliative / comfort protocol
-              </div>
-            </div>
-            <span
-              style={{
-                fontSize: '1.1rem',
-                fontWeight: 800,
-                color: 'var(--text-primary, #e9ece9)',
-                fontFamily: 'var(--font-mono)',
-                background: 'rgba(102, 117, 100, 0.2)',
-                padding: '2px 8px',
-                borderRadius: '3px',
-              }}
-            >
-              {expectantCasualties.length}
-            </span>
-          </div>
-
-          <div style={{ padding: '10px', display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, minHeight: '300px' }}>
-            {filteredCasualties(expectantCasualties).map((casualty) => (
-              <CasualtyTriageCard
-                key={casualty.id}
-                casualty={casualty}
-                onOpenOverride={handleOpenOverride}
-                onReevaluate={handleRunAutoReevaluation}
-                categoryColor="var(--text-muted, #667564)"
-              />
-            ))}
-            {filteredCasualties(expectantCasualties).length === 0 && (
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted, #667564)', textAlign: 'center', padding: '24px 8px' }}>
-                No casualties currently in Expectant category.
-              </div>
-            )}
-          </div>
-        </div>
       </div>
 
       {/* Operator Manual Override Modal */}
@@ -464,8 +400,8 @@ export const TriageBoardTab: React.FC<TriageBoardTabProps> = ({
                 <label style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-secondary, #94a192)', display: 'block', marginBottom: '6px' }}>
                   Target Triage Priority
                 </label>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
-                  {(['immediate', 'delayed', 'minimal', 'expectant'] as TriageCategory[]).map((cat) => (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
+                  {(['immediate', 'delayed', 'minimal'] as TriageCategory[]).map((cat) => (
                     <button
                       key={cat}
                       type="button"
@@ -482,9 +418,7 @@ export const TriageBoardTab: React.FC<TriageBoardTabProps> = ({
                             ? 'rgba(200, 90, 83, 0.25)'
                             : cat === 'delayed'
                             ? 'rgba(212, 163, 115, 0.25)'
-                            : cat === 'minimal'
-                            ? 'rgba(88, 129, 87, 0.25)'
-                            : 'rgba(102, 117, 100, 0.25)',
+                            : 'rgba(88, 129, 87, 0.25)',
                         color: 'var(--text-primary, #e9ece9)',
                         cursor: 'pointer',
                         fontFamily: 'var(--font-mono)',
