@@ -368,9 +368,7 @@ export const CommandHeader: React.FC<CommandHeaderProps> = ({
                     </div>
                     {[
                       { role: 'administrator' as UserRole, label: 'Administrator', desc: 'Full access & scenario controls' },
-                      { role: 'operations_officer' as UserRole, label: 'Operations Officer', desc: 'Incidents & SkyWatch' },
                       { role: 'medical_officer' as UserRole, label: 'Medical Officer', desc: 'Triage & Soldier Vitals intake' },
-                      { role: 'read_only_viewer' as UserRole, label: 'Read-Only Viewer', desc: 'Observation only' },
                     ].map((item) => (
                       <button
                         key={item.role}
