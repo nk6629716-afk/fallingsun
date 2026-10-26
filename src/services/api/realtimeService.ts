@@ -53,7 +53,7 @@ export class RealtimeService {
   private reconnectAttempts = 0;
   private reconnectTimer: any = null;
   private staleTimer: any = null;
-  private isExplicitlyDisconnected = false;
+  private isExplicitlyDisconnected = true;
 
   // Safe Event Deduplication Cache
   private seenEventKeys = new Set<string>();

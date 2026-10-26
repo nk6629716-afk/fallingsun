@@ -18,6 +18,8 @@ import {
   ChevronDown,
   ChevronUp,
 } from 'lucide-react';
+import { classifyTrack, TRACK_CLASSIFICATION_LABELS } from '../utils/trackClassification';
+import { formatSpeed, formatAltitude } from '../utils/units';
 
 export interface TacticalMapProps {
   incidents?: IncidentReport[];
@@ -113,8 +115,13 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
     terrain: false,
   });
 
-  // Collapsible Layers panel (collapsed by default for clean, low-clutter operational picture)
-  const [isLayersCollapsed, setIsLayersCollapsed] = useState<boolean>(true);
+  // Collapsible Layers panel (collapsed by default below 1100px width or 700px height)
+  const [isLayersCollapsed, setIsLayersCollapsed] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth < 1100 || window.innerHeight < 700;
+    }
+    return false;
+  });
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -387,8 +394,13 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
 
           {/* Mode Switcher Segmented Control */}
           <div
-            className="segmented-switch"
             style={{
+              display: 'inline-flex',
+              border: 'var(--border-width, 1.2px) solid var(--color-edge)',
+              boxShadow: 'var(--shadow-flat-sm)',
+              background: 'var(--color-sheet)',
+              borderRadius: 'var(--radius-sm)',
+              overflow: 'hidden',
               pointerEvents: 'auto',
               flexShrink: 0,
             }}
@@ -398,27 +410,56 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
           >
             <button
               type="button"
-              className={`segmented-switch-btn ${radarMode === 'topo' ? 'active' : ''}`}
               onClick={() => handleSetMode('topo')}
+              style={{
+                background: radarMode === 'topo' ? 'var(--color-strip)' : 'transparent',
+                color: radarMode === 'topo' ? '#FFFFFF' : 'var(--text-primary)',
+                border: 'none',
+                padding: '6px 14px',
+                fontSize: '0.78rem',
+                fontFamily: 'var(--font-heading)',
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
               title="Cartographic Terrain Chart"
             >
-              CHART
+              Chart
             </button>
             <button
               type="button"
-              className={`segmented-switch-btn ${radarMode === 'ppi' ? 'active' : ''}`}
               onClick={() => handleSetMode('ppi')}
+              style={{
+                background: radarMode === 'ppi' ? 'var(--color-strip)' : 'transparent',
+                color: radarMode === 'ppi' ? '#FFFFFF' : 'var(--text-primary)',
+                border: 'none',
+                padding: '6px 14px',
+                fontSize: '0.78rem',
+                fontFamily: 'var(--font-heading)',
+                fontWeight: 700,
+                cursor: 'pointer',
+                borderLeft: '1px solid var(--color-edge)',
+                borderRight: '1px solid var(--color-edge)',
+              }}
               title="Plan Position Indicator (PPI) Radar Scope"
             >
-              RADAR
+              Radar
             </button>
             <button
               type="button"
-              className={`segmented-switch-btn ${radarMode === 'flir' ? 'active' : ''}`}
               onClick={() => handleSetMode('flir')}
+              style={{
+                background: radarMode === 'flir' ? 'var(--color-strip)' : 'transparent',
+                color: radarMode === 'flir' ? '#FFFFFF' : 'var(--text-primary)',
+                border: 'none',
+                padding: '6px 14px',
+                fontSize: '0.78rem',
+                fontFamily: 'var(--font-heading)',
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
               title="Forward Looking Infrared (FLIR) Thermal Sensor"
             >
-              THERMAL
+              Thermal
             </button>
           </div>
         </div>
@@ -873,9 +914,10 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
           {activeLayers.airspace &&
             tracks.map((track) => {
               const pos = project(track.lat, track.lng);
-              const isHostile = track.status === 'hostile' || track.status === 'suspicious';
-              const isFriendly = track.type === 'friendly_uav' || (track.status as string) === 'friendly';
-              const isNeutral = track.type === 'commercial_fixed_wing' || (track.status as string) === 'neutral';
+              const classification = classifyTrack(track);
+              const isHostile = classification === 'HOSTILE';
+              const isFriendly = classification === 'FRIENDLY';
+              const isNeutral = classification === 'CIVILIAN';
               const isSelected = selectedEntityId === track.id;
 
               return (
@@ -888,7 +930,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                     onSelectEntity?.({ type: 'track', id: track.id, raw: track });
                   }}
                 >
-                  <title>{`${track.callsign} (${track.status}) - ${track.altitude}m, ${Math.round(track.speed)} km/h`}</title>
+                  <title>{`${track.callsign} (${TRACK_CLASSIFICATION_LABELS[classification]}) - ${formatAltitude(track.altitude)}, ${formatSpeed(track.speed)}`}</title>
 
                   {/* Target Symbol */}
                   {isHostile ? (
@@ -951,7 +993,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
                       fontSize="8"
                       fontFamily="var(--font-mono)"
                     >
-                      {track.altitude}m · {Math.round(track.speed)}km/h
+                      {formatAltitude(track.altitude)} · {formatSpeed(track.speed)}
                     </text>
                   </g>
                 </g>
@@ -971,14 +1013,14 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
               />
               <path
                 d={createSweepWedgePath(centerPt.x, centerPt.y, scopeRadius, 25)}
-                fill="rgba(115, 138, 101, 0.16)"
+                fill="rgba(0, 230, 118, 0.12)"
               />
               <line
                 x1={centerPt.x}
                 y1={centerPt.y}
                 x2={centerPt.x}
                 y2={centerPt.y - scopeRadius}
-                stroke="#738a65"
+                stroke="#00E676"
                 strokeWidth="1.5"
                 strokeOpacity="0.85"
               />

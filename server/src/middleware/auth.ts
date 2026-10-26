@@ -8,6 +8,8 @@ import { Request, Response, NextFunction } from 'express';
 import { getSupabaseClient, isSupabaseConfigured } from '../db/supabaseClient';
 import { UserRole, UserProfile } from '../../../shared/types';
 import { config } from '../config';
+import { db } from '../db/database';
+import { getSessionUser } from '../services/localAuthService';
 
 export interface AuthenticatedRequest extends Request {
   user?: UserProfile;
@@ -17,29 +19,41 @@ export interface AuthenticatedRequest extends Request {
 const DEMO_USERS: Record<string, UserProfile> = {
   'dev-admin-token': {
     id: 'usr-admin-01',
+    name: 'Cmdr. Vance (Admin)',
     email: 'admin@sentinel.mil',
     role: 'administrator',
+    status: 'approved',
+    createdAt: '2026-10-25T00:00:00.000Z',
     callsign: 'COMMAND-1',
     unit: 'HQ Command Element',
   },
   'dev-ops-token': {
     id: 'usr-ops-02',
+    name: 'Maj. Cross (Operations)',
     email: 'ops@sentinel.mil',
     role: 'operations_officer',
+    status: 'approved',
+    createdAt: '2026-10-25T00:00:00.000Z',
     callsign: 'TACTICAL-OPS',
     unit: 'Airspace & Field Operations',
   },
   'dev-medical-token': {
     id: 'usr-med-03',
+    name: 'Dr. Miller (Medical)',
     email: 'medical@sentinel.mil',
     role: 'medical_officer',
+    status: 'approved',
+    createdAt: '2026-10-25T00:00:00.000Z',
     callsign: 'MEDEVAC-LEAD',
     unit: 'Forward Triage & Health Monitoring',
   },
   'dev-viewer-token': {
     id: 'usr-view-04',
+    name: 'Observer Watch',
     email: 'viewer@sentinel.mil',
     role: 'read_only_viewer',
+    status: 'approved',
+    createdAt: '2026-10-25T00:00:00.000Z',
     callsign: 'OBSERVER-SIT',
     unit: 'Situational Awareness Watch',
   },
@@ -53,8 +67,15 @@ export async function authenticateToken(req: AuthenticatedRequest, res: Response
   const authHeader = req.headers.authorization;
   const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : null;
 
-  // 1. Check for demo / dev tokens (allowed in non-production or when Supabase is not configured)
-  if (token && DEMO_USERS[token]) {
+  if (token?.startsWith('sentinel-session-')) {
+    const user = getSessionUser(token);
+    if (user) { req.user = user; return next(); }
+    res.status(401).json({ success: false, error: 'Session expired or approval revoked. Sign in again.' });
+    return;
+  }
+
+  // 1. Check for demo / dev tokens (allowed only in non-production without a configured provider)
+  if (token && DEMO_USERS[token] && config.nodeEnv !== 'production' && !isSupabaseConfigured()) {
     req.user = DEMO_USERS[token];
     return next();
   }
@@ -66,24 +87,23 @@ export async function authenticateToken(req: AuthenticatedRequest, res: Response
       try {
         const { data: { user }, error } = await supabase.auth.getUser(token);
         if (!error && user) {
-          const rawRole = user.app_metadata?.role || user.user_metadata?.role || 'read_only_viewer';
-          const validRole: UserRole = ['administrator', 'operations_officer', 'medical_officer', 'read_only_viewer'].includes(rawRole)
-            ? (rawRole as UserRole)
-            : 'read_only_viewer';
-
-          req.user = {
-            id: user.id,
-            email: user.email || 'authenticated@sentinel.mil',
-            role: validRole,
-            callsign: user.user_metadata?.callsign || undefined,
-            unit: user.user_metadata?.unit || undefined,
-          };
+          const approvedUser = user.email ? db.getUserByEmail(user.email) : null;
+          if (!approvedUser || approvedUser.status !== 'approved') {
+            res.status(403).json({ success: false, error: 'Administrator approval is required.' });
+            return;
+          }
+          req.user = approvedUser;
           return next();
         }
       } catch (err) {
         // Fall through to unauthenticated handling
       }
     }
+  }
+
+  if (token) {
+    res.status(401).json({ success: false, error: 'Invalid session. Sign in again.' });
+    return;
   }
 
   // 3. Automated testing & local air-gap test fallback
@@ -99,8 +119,11 @@ export async function authenticateToken(req: AuthenticatedRequest, res: Response
     if (typeof devRoleHeader === 'string' && ['administrator', 'operations_officer', 'medical_officer', 'read_only_viewer'].includes(devRoleHeader)) {
       req.user = {
         id: `usr-dev-${devRoleHeader}`,
+        name: `Dev ${devRoleHeader}`,
         email: `${devRoleHeader}@sentinel.local`,
         role: devRoleHeader as UserRole,
+        status: 'approved',
+        createdAt: '2026-10-25T00:00:00.000Z',
       };
     } else {
       req.user = DEMO_USERS['dev-admin-token'];
@@ -144,7 +167,9 @@ export function requireRole(allowedRoles: UserRole[]) {
       return;
     }
 
-    if (!allowedRoles.includes(req.user.role)) {
+    const role = req.user.role;
+    const canonical = role === 'admin' ? 'administrator' : role === 'medic' ? 'medical_officer' : role === 'commander' ? 'operations_officer' : role === 'operator' ? 'read_only_viewer' : role;
+    if (!allowedRoles.includes(role) && !allowedRoles.includes(canonical)) {
       res.status(403).json({
         success: false,
         error: {

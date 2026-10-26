@@ -1,4 +1,5 @@
 import { RoadHazardEdge, CalculatedRoute } from '@shared/types';
+import { formatDuration } from '../utils/units';
 
 /**
  * Returns all blocked road hazard segments.
@@ -19,9 +20,9 @@ export function selectOpenHazards(hazards: RoadHazardEdge[] = []): RoadHazardEdg
  */
 export function selectActiveRouteEta(route: CalculatedRoute | null): string {
   if (!route || typeof route.estimatedMinutes !== 'number') {
-    return '-- min';
+    return '--';
   }
-  return `${Math.round(route.estimatedMinutes)} min`;
+  return formatDuration(route.estimatedMinutes);
 }
 
 /**

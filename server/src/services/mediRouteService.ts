@@ -26,7 +26,11 @@ export class MediRouteService {
   }
 
   public createPatient(input: CreatePatientInput): Patient {
-    const id = `PAT-${Date.now().toString(36).toUpperCase()}-${crypto.randomBytes(2).toString('hex').toUpperCase()}`;
+    if ((input as any).id) {
+      const existing = db.getPatientById((input as any).id);
+      if (existing) return existing;
+    }
+    const id = (input as any).id || `PAT-${Date.now().toString(36).toUpperCase()}-${crypto.randomBytes(2).toString('hex').toUpperCase()}`;
     const now = new Date().toISOString();
 
     const { category, reason } = this.evaluateDemoTriage(input.vitals, input.triageCategory);

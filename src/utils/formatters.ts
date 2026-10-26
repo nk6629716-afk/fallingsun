@@ -8,61 +8,7 @@
  * 4. Human-readable airspace rule names (e.g. NO_FLY_ZONE_INCURSION -> "Restricted Zone Incursion").
  */
 
-/**
- * Format duration in minutes or seconds cleanly.
- */
-export function formatDurationMinutes(minutes: number | null | undefined): string {
-  if (minutes === null || minutes === undefined || isNaN(minutes)) {
-    return '-- min';
-  }
-  const rounded = Math.round(minutes);
-  return `${rounded} min`;
-}
-
-/**
- * Format distance in kilometers or meters.
- */
-export function formatDistanceKm(km: number | null | undefined, decimals = 1): string {
-  if (km === null || km === undefined || isNaN(km)) {
-    return '-- km';
-  }
-  if (km < 1) {
-    return `${Math.round(km * 1000)} m`;
-  }
-  return `${km.toFixed(decimals)} km`;
-}
-
-/**
- * Format speed in standard km/h.
- * If input is in m/s (e.g. from simulation physics), it can be converted.
- */
-export function formatSpeedKmh(
-  speed: number | null | undefined,
-  inputUnit: 'kmh' | 'ms' | 'knots' = 'kmh'
-): string {
-  if (speed === null || speed === undefined || isNaN(speed)) {
-    return '-- km/h';
-  }
-
-  let kmh = speed;
-  if (inputUnit === 'ms') {
-    kmh = speed * 3.6;
-  } else if (inputUnit === 'knots') {
-    kmh = speed * 1.852;
-  }
-
-  return `${Math.round(kmh)} km/h`;
-}
-
-/**
- * Format altitude in meters MSL.
- */
-export function formatAltitudeMeters(altitudeM: number | null | undefined): string {
-  if (altitudeM === null || altitudeM === undefined || isNaN(altitudeM)) {
-    return '-- m';
-  }
-  return `${Math.round(altitudeM)}m MSL`;
-}
+export { formatDurationMinutes, formatDistanceKm, formatSpeedKmh, formatAltitudeMeters } from './units';
 
 /**
  * Rule Name Human Translation Map

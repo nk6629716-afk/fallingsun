@@ -1,21 +1,31 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { App } from './app/App';
+import { ApplicationEntry } from './app/ApplicationEntry';
 import './styles/index.css';
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
-    <App />
+    <ApplicationEntry />
   </React.StrictMode>
 );
 
+// Request persistent storage for IndexedDB & CacheStorage resilience
+if (typeof navigator !== 'undefined' && navigator.storage && navigator.storage.persist) {
+  navigator.storage.persist().then((isPersistent) => {
+    if (isPersistent) {
+      console.log('[Storage] Persistent storage granted by browser environment');
+    } else {
+      console.log('[Storage] Storage is subject to normal eviction under extreme disk pressure');
+    }
+  }).catch(() => {});
+}
+
 // Register Service Worker for offline PWA capabilities
-if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+if (import.meta.env.PROD && typeof window !== 'undefined' && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker
       .register('/sw.js')
       .then((reg) => {
-        // Successfully registered service worker
         if (reg.installing) {
           console.log('[SW] Service worker installing');
         } else if (reg.active) {

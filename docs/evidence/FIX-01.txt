@@ -1,0 +1,2 @@
+--- TEST FIX-01: Acceleration anomaly depends on tick size ---
+FIX-01 TESTS PASSED!

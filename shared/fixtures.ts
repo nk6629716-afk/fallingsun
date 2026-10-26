@@ -13,6 +13,9 @@ import {
   RoadHazardEdge,
   EvacuationNode,
   RoadGraphEdge,
+  UserProfile,
+  PersonnelProfile,
+  VitalSignRecord,
   SoldierProfile,
   SoldierVitalsRecord,
 } from './types';
@@ -439,7 +442,178 @@ export const INITIAL_HAZARDS: RoadHazardEdge[] = [
 ];
 
 // --------------------------------------------------------------------------
-// 7. Initial Soldiers & Historical Vitals (Simulated Baseline)
+// --------------------------------------------------------------------------
+// 7. Initial VitalWatch Personnel, Users & Manual Vitals Fixtures
+// --------------------------------------------------------------------------
+export const INITIAL_USERS: UserProfile[] = [
+  {
+    id: 'USR-ADMIN-1',
+    email: 'admin@sentinel.mil',
+    name: 'Cmdr. Sarah Vance',
+    role: 'admin',
+    status: 'approved',
+    callsign: 'OVERLORD',
+    teamId: 'TEAM-HQ',
+    teamName: 'Tactical HQ Command',
+    missionId: 'MSN-FALLING-SUN',
+    missionName: 'Operation Falling Sun',
+    createdAt: '2026-10-25T06:00:00.000Z',
+    approvedAt: '2026-10-25T06:00:00.000Z',
+    approvedBy: 'SYSTEM_SUPERUSER',
+  },
+  {
+    id: 'USR-MEDIC-1',
+    email: 'medic.miller@sentinel.mil',
+    name: 'Dr. Evelyn Miller',
+    role: 'medic',
+    status: 'approved',
+    callsign: 'ANGEL-LEAD',
+    teamId: 'TEAM-MED-ALPHA',
+    teamName: 'Forward Surgical Team 1',
+    missionId: 'MSN-FALLING-SUN',
+    missionName: 'Operation Falling Sun',
+    createdAt: '2026-10-25T06:30:00.000Z',
+    approvedAt: '2026-10-25T06:35:00.000Z',
+    approvedBy: 'USR-ADMIN-1',
+  },
+  {
+    id: 'USR-OP-1',
+    email: 'operator.chen@sentinel.mil',
+    name: 'Spec. Marcus Chen',
+    role: 'operator',
+    status: 'pending',
+    callsign: 'RAVEN-4',
+    teamId: 'TEAM-RECON-BRAVO',
+    teamName: 'Perimeter Recon Unit',
+    missionId: 'MSN-FALLING-SUN',
+    missionName: 'Operation Falling Sun',
+    createdAt: '2026-10-26T07:15:00.000Z',
+  },
+];
+
+export const INITIAL_PERSONNEL: PersonnelProfile[] = [
+  {
+    id: 'PERS-001',
+    email: 'j.price@sentinel.mil',
+    name: 'Capt. John Price',
+    role: 'commander',
+    status: 'approved',
+    callsign: 'BRAVO-6',
+    teamId: 'TEAM-ASSAULT-1',
+    teamName: 'Alpha Tactical Assault',
+    missionId: 'MSN-FALLING-SUN',
+    missionName: 'Operation Falling Sun',
+    createdAt: '2026-10-25T06:10:00.000Z',
+    approvedAt: '2026-10-25T06:15:00.000Z',
+    approvedBy: 'USR-ADMIN-1',
+    currentLocation: {
+      lat: 34.0545,
+      lng: -118.2425,
+      accuracyMeters: 4.5,
+      timestamp: '2026-10-26T08:00:00.000Z',
+      source: 'browser_gps',
+    },
+    locationHistory: [
+      { lat: 34.0530, lng: -118.2410, accuracyMeters: 5.0, timestamp: '2026-10-26T07:30:00.000Z', source: 'browser_gps' },
+      { lat: 34.0545, lng: -118.2425, accuracyMeters: 4.5, timestamp: '2026-10-26T08:00:00.000Z', source: 'browser_gps' },
+    ],
+    lastSeenAt: '2026-10-26T08:00:00.000Z',
+    isStale: false,
+  },
+  {
+    id: 'PERS-002',
+    email: 's.rodriguez@sentinel.mil',
+    name: 'Sgt. Sofia Rodriguez',
+    role: 'medic',
+    status: 'approved',
+    callsign: 'STITCH-2',
+    teamId: 'TEAM-MED-ALPHA',
+    teamName: 'Forward Surgical Team 1',
+    missionId: 'MSN-FALLING-SUN',
+    missionName: 'Operation Falling Sun',
+    createdAt: '2026-10-25T06:20:00.000Z',
+    approvedAt: '2026-10-25T06:25:00.000Z',
+    approvedBy: 'USR-ADMIN-1',
+    currentLocation: {
+      lat: 34.0610,
+      lng: -118.2395,
+      accuracyMeters: 3.8,
+      timestamp: '2026-10-26T08:02:00.000Z',
+      source: 'browser_gps',
+    },
+    locationHistory: [
+      { lat: 34.0590, lng: -118.2380, accuracyMeters: 6.2, timestamp: '2026-10-26T07:40:00.000Z', source: 'browser_gps' },
+      { lat: 34.0610, lng: -118.2395, accuracyMeters: 3.8, timestamp: '2026-10-26T08:02:00.000Z', source: 'browser_gps' },
+    ],
+    lastSeenAt: '2026-10-26T08:02:00.000Z',
+    isStale: false,
+  },
+  {
+    id: 'PERS-003',
+    email: 'k.ghost@sentinel.mil',
+    name: 'Lt. Simon Ghost',
+    role: 'operator',
+    status: 'approved',
+    callsign: 'SPECTRE-1',
+    teamId: 'TEAM-RECON-BRAVO',
+    teamName: 'Perimeter Recon Unit',
+    missionId: 'MSN-FALLING-SUN',
+    missionName: 'Operation Falling Sun',
+    createdAt: '2026-10-25T06:30:00.000Z',
+    approvedAt: '2026-10-25T06:35:00.000Z',
+    approvedBy: 'USR-ADMIN-1',
+    currentLocation: {
+      lat: 34.0675,
+      lng: -118.2315,
+      accuracyMeters: 12.0,
+      timestamp: '2026-10-26T07:10:00.000Z',
+      source: 'manual',
+    },
+    locationHistory: [
+      { lat: 34.0675, lng: -118.2315, accuracyMeters: 12.0, timestamp: '2026-10-26T07:10:00.000Z', source: 'manual' },
+    ],
+    lastSeenAt: '2026-10-26T07:10:00.000Z',
+    isStale: true, // > 15m ago
+  },
+];
+
+export const INITIAL_VITALS: VitalSignRecord[] = [
+  {
+    id: 'VIT-101',
+    personnelId: 'PERS-001',
+    personnelName: 'Capt. John Price',
+    heartRate: 74,
+    spo2: 99,
+    systolicBp: 122,
+    diastolicBp: 78,
+    temperature: 36.8,
+    respiratoryRate: 15,
+    timestamp: '2026-10-26T07:55:00.000Z',
+    recordedBy: 'Dr. Evelyn Miller',
+    recorderRole: 'medic',
+    notes: 'Post-patrol baseline check. Heart rate stable, clear lung sounds.',
+    isManual: true,
+  },
+  {
+    id: 'VIT-102',
+    personnelId: 'PERS-002',
+    personnelName: 'Sgt. Sofia Rodriguez',
+    heartRate: 82,
+    spo2: 98,
+    systolicBp: 118,
+    diastolicBp: 76,
+    temperature: 37.1,
+    respiratoryRate: 16,
+    timestamp: '2026-10-26T08:00:00.000Z',
+    recordedBy: 'Dr. Evelyn Miller',
+    recorderRole: 'medic',
+    notes: 'Pre-deployment checkup. Normal hydration and exertion levels.',
+    isManual: true,
+  },
+];
+
+// --------------------------------------------------------------------------
+// 8. Initial Soldiers & Historical Vitals (Simulated Baseline)
 // --------------------------------------------------------------------------
 export const INITIAL_SOLDIERS: SoldierProfile[] = [
   { id: 'CAS-0419', callsign: 'CAS-0419 (Viper Lead)', unit: '1st Recon Team Alpha (CCP Delta)', status: 'active' },

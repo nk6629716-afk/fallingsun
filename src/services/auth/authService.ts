@@ -44,18 +44,6 @@ class AuthService {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         this.currentSession = JSON.parse(stored);
-      } else {
-        // Default to demo administrator for out-of-the-box local evaluation
-        this.currentSession = {
-          token: 'dev-admin-token',
-          user: {
-            id: 'usr-admin-demo',
-            email: 'admin@sentinel.mil',
-            role: 'administrator',
-            callsign: 'COMMAND-1',
-            unit: 'HQ Command Element',
-          },
-        };
       }
     } catch {
       this.currentSession = null;
@@ -67,19 +55,23 @@ class AuthService {
   }
 
   public getToken(): string | null {
-    return this.currentSession?.token || null;
+    try { return localStorage.getItem('sentinel_auth_token'); } catch { return null; }
   }
 
   public getUser(): UserProfile | null {
-    return this.currentSession?.user || null;
+    try {
+      const user = localStorage.getItem('sentinel_auth_user');
+      return user ? JSON.parse(user) : null;
+    } catch { return null; }
   }
 
   public getRole(): UserRole {
-    return this.currentSession?.user?.role || 'read_only_viewer';
+    const role = this.getUser()?.role;
+    return role === 'admin' ? 'administrator' : role === 'medic' ? 'medical_officer' : role === 'commander' ? 'operations_officer' : role || 'read_only_viewer';
   }
 
   public isAuthenticated(): boolean {
-    return Boolean(this.currentSession?.token);
+    return Boolean(this.getToken());
   }
 
   public hasRole(requiredRoles: UserRole[]): boolean {
@@ -106,8 +98,11 @@ class AuthService {
         expiresAt: data.session.expires_at,
         user: {
           id: data.user.id,
+          name: data.user.user_metadata?.name || data.user.email?.split('@')[0] || 'Operator',
           email: data.user.email || email,
           role,
+          status: 'approved',
+          createdAt: data.user.created_at || new Date().toISOString(),
           callsign: data.user.user_metadata?.callsign,
           unit: data.user.user_metadata?.unit,
         },
@@ -146,8 +141,11 @@ class AuthService {
 
     const user: UserProfile = {
       id: `usr-${role}-demo`,
+      name: `Demo ${role.replace('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase())}`,
       email: `${role.replace('_', '.')}@sentinel.mil`,
       role,
+      status: 'approved',
+      createdAt: '2026-10-25T00:00:00.000Z',
       callsign:
         role === 'administrator'
           ? 'COMMAND-1'

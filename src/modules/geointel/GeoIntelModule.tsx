@@ -768,8 +768,8 @@ export const GeoIntelModule: React.FC<GeoIntelModuleProps> = ({
                   const boxH = Math.max(28, Math.round(normH * 340));
                   const isSelected = selectedCandidateId === c.id;
 
-                  const labelText = `${c.id} ${c.label.toLowerCase()}, ${c.differenceScore.toFixed(2)}`;
-                  const tagW = Math.min(180, Math.max(110, labelText.length * 6.5 + 20));
+                  const labelText = c.id;
+                  const tagW = Math.max(56, labelText.length * 7 + 16);
 
                   return (
                     <g
@@ -777,31 +777,35 @@ export const GeoIntelModule: React.FC<GeoIntelModuleProps> = ({
                       onClick={() => setSelectedCandidateId(c.id)}
                       style={{ cursor: 'pointer' }}
                     >
+                      <title>{`${c.id}: ${c.label} (${(c.differenceScore * 100).toFixed(0)}% delta)`}</title>
                       <rect
                         x={boxX}
                         y={boxY}
                         width={boxW}
                         height={boxH}
-                        fill={isSelected ? 'rgba(232, 89, 12, 0.18)' : 'rgba(232, 89, 12, 0.08)'}
-                        stroke={isSelected ? 'var(--color-ink)' : 'var(--color-accent)'}
-                        strokeWidth={isSelected ? '2.4' : '1.6'}
+                        fill={isSelected ? 'rgba(0, 230, 118, 0.18)' : 'rgba(0, 230, 118, 0.06)'}
+                        stroke={isSelected ? 'var(--accent-primary, #00E676)' : 'var(--border-strong, #35544C)'}
+                        strokeWidth={isSelected ? '2' : '1.2'}
                         strokeDasharray="4 3"
                       />
-                      {/* Tag label */}
+                      {/* Compact Tag label with high contrast */}
                       <rect
                         x={boxX}
                         y={Math.max(0, boxY - 20)}
                         width={tagW}
                         height="18"
-                        fill={isSelected ? 'var(--color-ink)' : 'var(--color-accent)'}
+                        rx="2"
+                        fill={isSelected ? 'var(--accent-primary, #00E676)' : 'var(--bg-card, #131E1B)'}
+                        stroke={isSelected ? 'var(--accent-primary, #00E676)' : 'var(--border-card, #263D37)'}
+                        strokeWidth="1"
                       />
                       <text
                         x={boxX + tagW / 2}
                         y={Math.max(12, boxY - 7)}
-                        fill="#FFFFFF"
+                        fill={isSelected ? '#060A09' : 'var(--text-primary, #F0FDF4)'}
                         fontSize="10"
-                        fontFamily="var(--font-heading)"
-                        fontWeight="800"
+                        fontFamily="var(--font-mono, monospace)"
+                        fontWeight="700"
                         textAnchor="middle"
                       >
                         {labelText}
@@ -998,8 +1002,8 @@ export const GeoIntelModule: React.FC<GeoIntelModuleProps> = ({
                   const mapX = Math.round(normX * 700 + (normW * 700) / 2);
                   const mapY = Math.round(normY * 220 + (normH * 220) / 2);
                   const isSelected = selectedCandidateId === c.id;
-                  const labelText = `${c.id} ${c.label.toLowerCase()}`;
-                  const tagW = Math.min(160, Math.max(90, labelText.length * 6.5 + 20));
+                  const labelText = c.id;
+                  const tagW = Math.max(54, labelText.length * 7 + 14);
 
                   return (
                     <g
@@ -1007,13 +1011,16 @@ export const GeoIntelModule: React.FC<GeoIntelModuleProps> = ({
                       onClick={() => setSelectedCandidateId(c.id)}
                       style={{ cursor: 'pointer' }}
                     >
+                      <title>{`${c.id}: ${c.label} (${(c.differenceScore * 100).toFixed(0)}% delta)`}</title>
                       <circle
                         cx={mapX}
                         cy={mapY}
-                        r={isSelected ? '13' : '11'}
-                        fill={isSelected ? 'var(--color-ink)' : 'var(--color-accent)'}
+                        r={isSelected ? '12' : '10'}
+                        fill={isSelected ? 'var(--accent-primary, #00E676)' : 'var(--bg-elevated, #1A2925)'}
+                        stroke={isSelected ? 'var(--accent-primary, #00E676)' : 'var(--border-strong, #35544C)'}
+                        strokeWidth="1.5"
                       />
-                      <text x={mapX} y={mapY + 4} fill="#FFFFFF" fontSize="11" fontWeight="800" textAnchor="middle">
+                      <text x={mapX} y={mapY + 4} fill={isSelected ? '#060A09' : 'var(--text-primary, #F0FDF4)'} fontSize="10" fontFamily="var(--font-mono, monospace)" fontWeight="700" textAnchor="middle">
                         {index + 1}
                       </text>
                       <rect
@@ -1021,16 +1028,18 @@ export const GeoIntelModule: React.FC<GeoIntelModuleProps> = ({
                         y={mapY - 9}
                         width={tagW}
                         height="18"
-                        fill="#FFFFFF"
-                        stroke="var(--color-ink)"
-                        strokeWidth="1.2"
+                        rx="2"
+                        fill={isSelected ? 'var(--accent-primary, #00E676)' : 'var(--bg-card, #131E1B)'}
+                        stroke={isSelected ? 'var(--accent-primary, #00E676)' : 'var(--border-card, #263D37)'}
+                        strokeWidth="1"
                       />
                       <text
                         x={mapX + 16 + tagW / 2}
                         y={mapY + 4}
-                        fill="var(--color-ink)"
+                        fill={isSelected ? '#060A09' : 'var(--text-primary, #F0FDF4)'}
                         fontSize="9.5"
-                        fontWeight="800"
+                        fontFamily="var(--font-mono, monospace)"
+                        fontWeight="700"
                         textAnchor="middle"
                       >
                         {labelText}
@@ -1438,59 +1447,9 @@ export const GeoIntelModule: React.FC<GeoIntelModuleProps> = ({
           ))}
         </div>
 
-        <span style={{ fontSize: '0.76rem', color: 'var(--color-ink-2)' }}>Replay</span>
-
-        {/* Timeline Slider with orange scrubber */}
-        <div style={{ flex: 1, position: 'relative', height: '14px', display: 'flex', alignItems: 'center' }}>
-          <div style={{ width: '100%', height: '2px', background: 'var(--color-line)', position: 'relative' }}>
-            {[0.15, 0.28, 0.45, 0.62, 0.78, 0.92].map((tick, i) => (
-              <div
-                key={`tick-${i}`}
-                style={{
-                  position: 'absolute',
-                  left: `${tick * 100}%`,
-                  top: '-3px',
-                  width: '1.5px',
-                  height: '8px',
-                  background: 'var(--color-edge)',
-                }}
-              />
-            ))}
-            {/* Scrubber marker with timestamp */}
-            <div
-              style={{
-                position: 'absolute',
-                left: '52%',
-                top: '-16px',
-                transform: 'translateX(-50%)',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-              }}
-            >
-              <div
-                style={{
-                  background: 'var(--color-strip)',
-                  color: '#FFFFFF',
-                  padding: '1px 6px',
-                  fontSize: '0.7rem',
-                  fontWeight: 700,
-                  fontVariantNumeric: 'tabular-nums',
-                  borderRadius: '2px',
-                  marginBottom: '2px',
-                }}
-              >
-                14:30:12
-              </div>
-              <div style={{ width: '2px', height: '12px', background: 'var(--color-accent)' }} />
-            </div>
-          </div>
-        </div>
-
-        {/* Ticker message */}
-        <div style={{ fontSize: '0.75rem', color: 'var(--color-ink-2)', maxWidth: '420px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-          Alpha to Command: contact east of bridge, 2 hops, 380 ms
-        </div>
+        <span style={{ fontSize: '0.74rem', color: 'var(--text-secondary, #869E96)' }}>
+          {isPlaying ? 'Replay active' : 'Replay paused'} ({replaySpeed})
+        </span>
       </div>
 
       {/* Intelligence Report Modal */}

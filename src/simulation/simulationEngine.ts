@@ -2,7 +2,7 @@
  * SENTINEL — Master Simulation Engine & Realtime Bus
  * Implements Phase 1 (Live Simulation Engine), Phase 2 (FieldLink Mesh),
  * Phase 3 (SkyWatch Kinematics & Threat Scoring), and Phase 5 (MediRoute Live Vitals).
- * 
+ *
  * Provides deterministic seeded-RNG simulation with speed control (1x/2x/5x),
  * pause/step controls, and identical API interface online and offline.
  */
@@ -21,6 +21,9 @@ import type {
   Waypoint
 } from '../../shared/types.ts';
 import { SeededRNG } from './seededRNG.ts';
+import { sanitizeTrack, clampThreatScore } from '../utils/numericSafety.ts';
+import { leaderElection } from '../services/coordination/leaderElection.ts';
+import { meshBus } from '../services/coordination/meshBus.ts';
 
 export const RESTRICTED_AIRSPACE_ZONES: RestrictedAirspaceZone[] = [
   {
@@ -131,6 +134,9 @@ export class SimulationEngine {
   private speed: 1 | 2 | 5 = 1;
   private isPaused: boolean = false;
   private timer: any = null;
+  private accumulatorSec: number = 0;
+  private lastPerformanceNow: number = 0;
+  private readonly STEP_SEC: number = 1.0;
   private listeners: Set<SimulationListener> = new Set();
 
   // Internal state
@@ -144,6 +150,8 @@ export class SimulationEngine {
 
   // Past predicted positions for tracking prediction error in meters: trackId -> Map<futureTick, {lat, lng}>
   private pastPredictions: Map<string, Map<number, { lat: number; lng: number }>> = new Map();
+  private trackLastUpdatedTick: Map<string, number> = new Map();
+  private stoppedTracks: Set<string> = new Set();
   private predictionErrors: number[] = [];
   private alertLatencies: number[] = [142, 185, 210, 165]; // ms
   private routeRecalcCount: number = 2;
@@ -328,6 +336,12 @@ export class SimulationEngine {
         isSimulated: true,
       },
     ];
+
+    this.trackLastUpdatedTick.clear();
+    this.stoppedTracks.clear();
+    for (const track of this.tracks) {
+      this.trackLastUpdatedTick.set(track.id, this.tick);
+    }
 
     // Compute initial predictions & threat scores for all tracks
     this.updateTrackPredictionsAndThreats();
@@ -702,6 +716,17 @@ export class SimulationEngine {
       }
     }
 
+    // 5. BROADCAST SNAPSHOT TO FOLLOWER TABS IF LEADER (FIX-10)
+    if (leaderElection.isLeader()) {
+      leaderElection.broadcastTickSnapshot({
+        tick: this.tick,
+        simulatedTime: currentState.simulatedTime,
+        tracks: [...this.tracks],
+        alerts: [...this.alerts],
+        timestamp: nowIso,
+      });
+    }
+
     return currentState;
   }
 
@@ -715,6 +740,34 @@ export class SimulationEngine {
     const MAX_LAT = 34.085;
     const MIN_LNG = -118.280;
     const MAX_LNG = -118.210;
+
+    // Update last updated tick for active tracks that are not stopped
+    for (const track of this.tracks) {
+      if (!this.stoppedTracks.has(track.id)) {
+        this.trackLastUpdatedTick.set(track.id, this.tick);
+      }
+    }
+
+    // Prune stale tracks that have not received an update for >= 10 simulated seconds
+    const staleTrackIds: string[] = [];
+    this.tracks = this.tracks.filter((track) => {
+      const lastTick = this.trackLastUpdatedTick.get(track.id) ?? this.tick;
+      if (this.tick - lastTick >= 10) {
+        staleTrackIds.push(track.id);
+        return false;
+      }
+      return true;
+    });
+
+    if (staleTrackIds.length > 0) {
+      // Close open alert keys for stale tracks through FIX-02 rule
+      for (const alert of this.alerts) {
+        if (alert.trackId && staleTrackIds.includes(alert.trackId)) {
+          (alert as any).closed = true;
+          (alert as any).status = 'closed';
+        }
+      }
+    }
 
     // Find swarm leader
     const swarmLeader = this.tracks.find((t) => t.id === 'TRK-SWARM-S1');
@@ -773,7 +826,7 @@ export class SimulationEngine {
         { lat: newLat, lng: newLng, altitude: newAltitude, timestamp },
       ];
 
-      return {
+      const updatedTrack = {
         ...track,
         lat: newLat,
         lng: newLng,
@@ -783,6 +836,8 @@ export class SimulationEngine {
         flightHistory: updatedHistory,
         timestamp,
       };
+
+      return sanitizeTrack(updatedTrack, track);
     });
 
     // Compute 60-second forward trajectory projection & transparent threat score
@@ -885,7 +940,7 @@ export class SimulationEngine {
       const headingScore = closestZone && minCpaDist < (closestZone.radiusKm * 1000 + 1000) ? 10 : 0;
 
       const rawTotal = speedScore + altitudeScore + transponderScore + breachScore + loiterScore + headingScore;
-      const totalScore = track.type === 'friendly_uav' ? 5 : Math.min(100, Math.max(0, rawTotal));
+      const totalScore = track.type === 'friendly_uav' ? 5 : clampThreatScore(rawTotal);
 
       track.threatScore = totalScore;
       track.threatFactors = {
@@ -1053,14 +1108,17 @@ export class SimulationEngine {
   /**
    * Speed Control (1x / 2x / 5x)
    */
-  public setSpeed(speed: 1 | 2 | 5): void {
-    this.speed = speed;
+  /**
+   * Speed Control (scales dt only, never thresholds - FIX-09)
+   */
+  public setSpeed(speed: 1 | 2 | 5 | number): void {
+    this.speed = (speed as any) || 1;
     if (!this.isPaused && this.timer) {
-      this.start(); // Restart timer with new interval
+      this.start();
     }
   }
 
-  public getSpeed(): 1 | 2 | 5 {
+  public getSpeed(): 1 | 2 | 5 | number {
     return this.speed;
   }
 
@@ -1103,9 +1161,10 @@ export class SimulationEngine {
     }
   }
 
-  public resume(): void {
+  public resume(now?: number): void {
     this.isPaused = false;
-    this.start();
+    this.lastPerformanceNow = now !== undefined ? now : (typeof performance !== 'undefined' ? performance.now() : Date.now());
+    this.start(this.lastPerformanceNow);
   }
 
   public isPausedState(): boolean {
@@ -1129,13 +1188,52 @@ export class SimulationEngine {
     return !this.isPaused && this.timer !== null;
   }
 
-  public start(): void {
+  /**
+   * Fixed-step accumulator tick:
+   * Real elapsed time (performance.now) capped at 5 steps catch-up, remainder dropped on capping.
+   */
+  public onTimerTick(now?: number): number {
+    const currentNow = now !== undefined ? now : (typeof performance !== 'undefined' ? performance.now() : Date.now());
+
+    if (this.isPaused) {
+      this.lastPerformanceNow = currentNow;
+      return 0;
+    }
+
+    const dtRealSec = Math.max(0, (currentNow - (this.lastPerformanceNow || currentNow)) / 1000);
+    this.lastPerformanceNow = currentNow;
+
+    // Scale dt only by speed, never thresholds
+    this.accumulatorSec += dtRealSec * (this.speed || 1);
+
+    let stepsToRun = Math.floor(this.accumulatorSec / this.STEP_SEC);
+    if (stepsToRun > 5) {
+      // Capped at 5 steps (catch-up) and drop the remainder to prevent hidden-tab jumps
+      stepsToRun = 5;
+      this.accumulatorSec = 0;
+    } else {
+      this.accumulatorSec -= stepsToRun * this.STEP_SEC;
+    }
+
+    for (let i = 0; i < stepsToRun; i++) {
+      this.step();
+    }
+
+    return stepsToRun;
+  }
+
+  public start(now?: number): void {
     if (this.timer) {
       clearInterval(this.timer);
     }
-    const intervalMs = Math.round(1000 / this.speed);
+    if (now !== undefined) {
+      this.lastPerformanceNow = now;
+    } else if (!this.lastPerformanceNow) {
+      this.lastPerformanceNow = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    }
+    const intervalMs = Math.min(250, Math.max(50, Math.round(1000 / (this.speed || 1))));
     this.timer = setInterval(() => {
-      this.step();
+      this.onTimerTick();
     }, intervalMs);
   }
 
@@ -1148,6 +1246,8 @@ export class SimulationEngine {
 
   public reset(seed?: number): void {
     this.stop();
+    this.accumulatorSec = 0;
+    this.lastPerformanceNow = typeof performance !== 'undefined' ? performance.now() : Date.now();
     if (seed !== undefined) {
       this.seed = seed;
     }
@@ -1207,6 +1307,75 @@ export class SimulationEngine {
     });
     this.routeRecalcCount += 1;
     return this.hazards;
+  }
+
+  /**
+   * Adds a telemetry track directly to the simulation engine state
+   */
+  public addTrack(track: TelemetryTrack): void {
+    this.tracks.push(track);
+    this.trackLastUpdatedTick.set(track.id, this.tick);
+  }
+
+  /**
+   * Adds an airspace alert directly to the simulation engine state
+   */
+  public addAlert(alert: AirspaceAlert): void {
+    this.alerts.push(alert);
+  }
+
+  /**
+   * Stops simulated or external updates for a track (to test or trigger staleness)
+   */
+  public stopUpdatingTrack(trackId: string): void {
+    this.stoppedTracks.add(trackId);
+  }
+
+  /**
+   * Applies tick snapshot received from the leader tab (FIX-10)
+   */
+  public applySnapshot(snapshot: {
+    tick: number;
+    simulatedTime?: string;
+    tracks: TelemetryTrack[];
+    alerts: AirspaceAlert[];
+  }): void {
+    this.tick = snapshot.tick;
+    this.tracks = [...snapshot.tracks];
+    this.alerts = [...snapshot.alerts];
+
+    const currentState = this.getState();
+    for (const listener of this.listeners) {
+      try {
+        listener(currentState);
+      } catch (err) {
+        console.error('Simulation listener error on snapshot:', err);
+      }
+    }
+  }
+
+  /**
+   * Subscribes simulation engine to multi-tab coordination & snapshots
+   */
+  public initMultiTabCoordination(): () => void {
+    const unsubSnapshots = meshBus.subscribe('TICK_SNAPSHOT', (envelope) => {
+      if (!leaderElection.isLeader() && envelope.payload) {
+        this.applySnapshot(envelope.payload);
+      }
+    });
+
+    const unsubLeader = leaderElection.onLeaderChange((isLeader) => {
+      if (isLeader) {
+        this.start();
+      } else {
+        this.stop();
+      }
+    });
+
+    return () => {
+      unsubSnapshots();
+      unsubLeader();
+    };
   }
 
   /**

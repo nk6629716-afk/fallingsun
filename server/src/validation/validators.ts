@@ -281,6 +281,8 @@ export function validateCreateGeoObservation(body: unknown): CreateGeoObservatio
   }
 
   return {
+    id: typeof b.id === 'string' ? b.id.trim() : undefined,
+    clientId: typeof b.clientId === 'string' ? b.clientId.trim() : undefined,
     samplePairId: (b.samplePairId as string).trim(),
     beforeImageId: (b.beforeImageId as string).trim(),
     afterImageId: (b.afterImageId as string).trim(),

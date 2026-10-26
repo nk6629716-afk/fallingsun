@@ -12,7 +12,7 @@ import { alertRouter } from './routes/alertRoutes';
 import { geoIntelRouter } from './routes/geoIntelRoutes';
 import { mediRouteRouter } from './routes/mediRouteRoutes';
 import { demoRouter } from './routes/demoRoutes';
-import { authRouter } from './routes/authRoutes';
+import { authRouter, vitalWatchRouter } from './routes/vitalWatchRoutes';
 import { soldierVitalsRouter } from './routes/soldierVitalsRoutes';
 import { authenticateToken, requireRole } from './middleware/auth';
 import { sseManager } from './realtime/sseHandler';
@@ -49,8 +49,9 @@ export function createApp(): express.Application {
   app.use('/api/alerts', alertRouter);
   app.use('/api/geointel', geoIntelRouter);
   app.use('/api', mediRouteRouter);
+  app.use('/api/demo', requireRole(['administrator', 'admin']), demoRouter);
+  app.use('/api/vitalwatch', vitalWatchRouter);
   app.use('/api/vitals', soldierVitalsRouter);
-  app.use('/api/demo', requireRole(['administrator']), demoRouter);
 
   // 404 Handler for undefined API routes
   app.use('/api/*', (req: Request, res: Response) => {

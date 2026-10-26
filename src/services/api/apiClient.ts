@@ -32,6 +32,7 @@ import {
 } from '../data/fixtures';
 import { INITIAL_SOLDIERS, INITIAL_SOLDIER_VITALS } from '../../../shared/fixtures';
 import { simulationEngine, SimulationTickState } from '../../simulation/simulationEngine';
+import { meshBus } from '../coordination/meshBus';
 import { authService } from '../auth/authService';
 
 
@@ -49,7 +50,7 @@ function resolveApiBaseUrl(): string {
   }
 }
 
-const API_BASE_URL = resolveApiBaseUrl();
+export const API_BASE_URL = resolveApiBaseUrl();
 
 export class SentinelApiClient {
   private isSimulatedOffline: boolean = false;
@@ -304,6 +305,7 @@ export class SentinelApiClient {
       if (res.ok) {
         const body = await res.json();
         const saved = body.data || body;
+        const oldLocalId = report.id;
         const normalized: IncidentReport = {
           ...report,
           id: saved.id || report.id,
@@ -311,17 +313,17 @@ export class SentinelApiClient {
           syncStatus: 'synced',
           syncedAt: saved.syncedAt || new Date().toISOString(),
         };
-        await dbService.putIncident(normalized);
+        await dbService.confirmIncidentAtomic(oldLocalId, normalized, report.clientId);
         return normalized;
       }
     } catch (err) {
       console.warn('[ApiClient] Failed to create incident on server, queuing in local outbox:', err);
     }
 
-    // Fallback: save to outbox as pending
+    // Fallback: save to outbox as pending with stable clientId
     report.syncStatus = 'pending';
     report.status = 'pending_sync';
-    await dbService.putIncident(report);
+    await dbService.queueMutation('incident', 'create', report, report.clientId || report.id);
     return report;
   }
 
@@ -377,12 +379,13 @@ export class SentinelApiClient {
               (resItem as any).status === 'already_received';
 
             if (isConfirmed) {
+              const oldLocalId = match.id;
               match.syncStatus = 'synced';
               match.status = 'active';
               match.id = resItem.serverId || match.id;
               match.syncedAt = resItem.syncTimestamp || (resItem as any).syncedAt || new Date().toISOString();
               delete (match as any).syncError;
-              await dbService.putIncident(match);
+              await dbService.confirmIncidentAtomic(oldLocalId, match, match.clientId);
             } else if (resItem.outcome === 'rejected' || (resItem as any).status === 'rejected') {
               match.syncStatus = 'failed';
               match.status = 'pending_sync';
@@ -461,6 +464,12 @@ export class SentinelApiClient {
     alert.acknowledgedAt = new Date().toISOString();
     alert.acknowledgedBy = user;
     await dbService.updateAlert(alert);
+    await dbService.queueMutation(
+      'alert_ack',
+      'acknowledge',
+      { alertId: id, acknowledged: true, acknowledgedBy: user, acknowledgedAt: alert.acknowledgedAt },
+      id
+    );
     return alert;
   }
 
@@ -542,6 +551,8 @@ export class SentinelApiClient {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          id: observation.id,
+          clientId: observation.clientId || observation.id,
           samplePairId: observation.samplePairId || 'PAIR-SURVEILLANCE-DEMO',
           beforeImageId: observation.beforeImageId || 'IMG-BEFORE',
           afterImageId: observation.afterImageId || 'IMG-AFTER',
@@ -557,12 +568,17 @@ export class SentinelApiClient {
       if (res.ok) {
         const body = await res.json();
         const created = body.data || body;
+        const oldId = observation.id;
         const normalized: GeoIntelObservation = {
           ...observation,
           id: created.id || observation.id,
           reviewStatus: created.reviewStatus || observation.reviewStatus,
+          syncStatus: 'synced',
+          syncedAt: new Date().toISOString(),
         };
-        (normalized as any).syncStatus = 'synced';
+        if (oldId && oldId !== normalized.id) {
+          await dbService.deleteGeoObservation(oldId);
+        }
         await dbService.putGeoObservation(normalized);
         return normalized;
       }
@@ -596,6 +612,8 @@ export class SentinelApiClient {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
+            id: obs.id,
+            clientId: (obs as any).clientId || obs.id,
             samplePairId: obs.samplePairId || 'PAIR-SURVEILLANCE-DEMO',
             beforeImageId: obs.beforeImageId || 'IMG-BEFORE',
             afterImageId: obs.afterImageId || 'IMG-AFTER',
@@ -609,13 +627,25 @@ export class SentinelApiClient {
         });
 
         if (res.ok) {
+          const body = await res.json();
+          const created = body.data || body;
+          const oldId = obs.id;
           (obs as any).syncStatus = 'synced';
+          (obs as any).syncedAt = new Date().toISOString();
+          if (created.id && created.id !== oldId) {
+            obs.id = created.id;
+            await dbService.deleteGeoObservation(oldId);
+          }
           await dbService.putGeoObservation(obs);
           synced++;
         } else {
+          (obs as any).syncStatus = 'failed';
+          await dbService.putGeoObservation(obs);
           failed++;
         }
       } catch (err) {
+        (obs as any).syncStatus = 'failed';
+        await dbService.putGeoObservation(obs);
         failed++;
       }
     }
@@ -694,6 +724,7 @@ export class SentinelApiClient {
     cas.updatedAt = new Date().toISOString();
 
     await dbService.putCasualty(cas);
+    await dbService.queueMutation('casualty', 'update', cas, cas.id);
     return cas;
   }
 
@@ -710,6 +741,16 @@ export class SentinelApiClient {
     edge.blocked = blocked;
     edge.updatedAt = new Date().toISOString();
     await dbService.putHazard(edge);
+    await dbService.queueMutation('hazard', blocked ? 'block' : 'unblock', edge, edge.id);
+
+    // Broadcast HAZARD_UPDATE across tabs (FIX-13)
+    meshBus.publish('HAZARD_UPDATE', {
+      edgeId: edge.id,
+      blocked,
+      hazardType: edge.hazardType,
+      version: `${Date.now()}.${edge.id}`,
+      updatedAt: edge.updatedAt,
+    });
 
     const isOnline = await this.checkBackendAvailability();
     if (isOnline) {

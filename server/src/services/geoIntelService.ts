@@ -17,11 +17,21 @@ export class GeoIntelService {
   }
 
   public createObservation(input: CreateGeoObservationInput): GeoIntelObservation {
-    const id = `GEO-${Date.now().toString(36).toUpperCase()}-${crypto.randomBytes(2).toString('hex').toUpperCase()}`;
+    if (input.clientId) {
+      const existing = db.getObservations().find((o) => (o as any).clientId === input.clientId);
+      if (existing) return existing;
+    }
+    if (input.id) {
+      const existing = db.getObservationById(input.id);
+      if (existing) return existing;
+    }
+
+    const id = input.id || `GEO-${Date.now().toString(36).toUpperCase()}-${crypto.randomBytes(2).toString('hex').toUpperCase()}`;
     const now = new Date().toISOString();
 
     const observation: GeoIntelObservation = {
       id,
+      clientId: input.clientId,
       title: `Surveillance Scan - ${input.samplePairId}`,
       zoneName: 'Target Surveillance Sector',
       samplePairId: input.samplePairId,

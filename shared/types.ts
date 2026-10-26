@@ -100,6 +100,24 @@ export interface OfflineSyncPayload {
   clientTimestamp: string;
 }
 
+export interface OutboxItem {
+  id: string; // client operation id
+  clientId?: string;
+  idempotencyKey?: string;
+  entityType: 'incident' | 'geointel' | 'casualty' | 'hazard' | 'alert_ack' | 'marker' | 'mesh_message';
+  action: 'create' | 'update' | 'delete' | 'block' | 'unblock' | 'acknowledge' | 'place' | 'remove' | 'send';
+  payload: any;
+  status: 'pending' | 'syncing' | 'synced' | 'failed';
+  attempts: number;
+  lastAttemptAt?: string;
+  nextRetryAt?: number;
+  errorMessage?: string;
+  createdAt: string; // device time
+  serverTime?: string; // server time
+  syncedAt?: string;
+  seq?: number; // monotonic sequence counter (FIX-17)
+}
+
 export type SyncItemOutcome = 'accepted' | 'already_received' | 'rejected';
 
 export interface SyncResponseItem {
@@ -340,9 +358,14 @@ export interface GeoIntelObservation {
   createdAt: string;
   updatedAt?: string;
   isSimulated: true;
+  clientId?: string;
+  syncStatus?: SyncStatus;
+  syncedAt?: string;
 }
 
 export interface CreateGeoObservationInput {
+  id?: string;
+  clientId?: string;
   samplePairId: string;
   beforeImageId: string;
   afterImageId: string;
@@ -366,7 +389,7 @@ export interface UpdateGeoObservationInput {
 // -------------------------------------------------------------
 // MODULE 4: MEDIROUTE (Emergency Medical Triage & Evacuation)
 // -------------------------------------------------------------
-export type TriageCategory = 
+export type TriageCategory =
   | 'immediate'
   | 'delayed'
   | 'minimal'
@@ -672,20 +695,35 @@ export interface SimulationMeasurableMetrics {
 }
 
 // -------------------------------------------------------------
-// SUPABASE AUTHENTICATION & ROLE-BASED ACCESS CONTROL (RBAC)
+// MODULE 5: VITALWATCH & AUTHENTICATION (RBAC)
 // -------------------------------------------------------------
 export type UserRole =
+  | 'medic'
+  | 'admin'
+  | 'commander'
+  | 'operator'
   | 'administrator'
   | 'operations_officer'
   | 'medical_officer'
   | 'read_only_viewer';
 
+export type UserApprovalStatus = 'pending' | 'approved' | 'rejected';
+
 export interface UserProfile {
   id: string;
   email: string;
+  name: string;
   role: UserRole;
+  status: UserApprovalStatus;
   callsign?: string;
   unit?: string;
+  teamId?: string;
+  teamName?: string;
+  missionId?: string;
+  missionName?: string;
+  createdAt: string;
+  approvedAt?: string;
+  approvedBy?: string;
 }
 
 export interface AuthSession {
@@ -694,9 +732,48 @@ export interface AuthSession {
   expiresAt?: number;
 }
 
-// -------------------------------------------------------------
+export interface VitalSignRecord {
+  id: string;
+  personnelId: string;
+  personnelName: string;
+  heartRate: number; // bpm
+  spo2: number; // %
+  systolicBp: number; // mmHg
+  diastolicBp: number; // mmHg
+  temperature: number; // °C
+  respiratoryRate: number; // breaths/min
+  timestamp: string; // ISO
+  recordedBy: string; // recorder identity
+  recorderRole: string; // 'medic' | 'admin'
+  notes?: string;
+  isManual: true; // Explicitly labeled manual
+}
+
+export interface PersonnelLocationPoint {
+  lat: number;
+  lng: number;
+  accuracyMeters?: number;
+  timestamp: string;
+  source: 'browser_gps' | 'manual';
+}
+
+export interface PersonnelProfile extends UserProfile {
+  currentLocation?: PersonnelLocationPoint;
+  locationHistory: PersonnelLocationPoint[];
+  lastSeenAt?: string;
+  isStale?: boolean; // true if > 15m or unknown
+}
+
+export interface VitalWatchSummary {
+  totalPersonnel: number;
+  approvedUsers: number;
+  pendingUsers: number;
+  activeLocationsCount: number;
+  staleLocationsCount: number;
+  recentVitalsCount: number;
+}
+
 // MODULE: SOLDIER VITALS & HEALTH MONITORING
-// -------------------------------------------------------------
 export interface SoldierProfile {
   id: string; // e.g. 'SOL-101'
   callsign: string; // e.g. 'Viper 1'
@@ -734,4 +811,3 @@ export interface CreateSoldierVitalsInput {
   respiratoryRateBpm?: number;
   clinicalNotes?: string;
 }
-

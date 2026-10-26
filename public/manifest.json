@@ -1,17 +1,39 @@
 {
+  "id": "sentinel-tactical-os",
   "name": "SENTINEL Tactical Operations Platform",
   "short_name": "SENTINEL",
   "description": "Tactical Operations & Common Operational Picture Platform with offline air-gap capabilities",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#0B101B",
   "theme_color": "#0B101B",
-  "orientation": "landscape-primary",
+  "orientation": "any",
+  "categories": ["government", "utilities", "productivity"],
   "icons": [
     {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234669a8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polygon points='12 2 2 7 12 12 22 7 12 2'/><polyline points='2 17 12 22 22 17'/><polyline points='2 12 12 17 22 12'/></svg>",
-      "sizes": "192x192 512x512",
-      "type": "image/svg+xml"
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
     }
   ]
 }

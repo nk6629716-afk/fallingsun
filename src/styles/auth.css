@@ -1,0 +1,265 @@
+/* ==========================================================================
+   SENTINEL Authentication & Verification Styles
+   Tactical C4ISR Command Palette, Restrained Visual Hierarchy
+   ========================================================================== */
+
+.auth-viewport {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-canvas, #060A09);
+  color: var(--text-primary, #F0FDF4);
+  padding: 1.5rem 1rem;
+  position: relative;
+  overflow-y: auto;
+}
+
+/* Background tactical grid lines */
+.auth-viewport::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, rgba(38, 61, 55, 0.15) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(38, 61, 55, 0.15) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+}
+
+.auth-container {
+  width: 100%;
+  max-width: 460px;
+  position: relative;
+  z-index: 1;
+}
+
+.auth-card {
+  background-color: var(--bg-card, #131E1B);
+  border: 1px solid var(--border-card, #263D37);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 230, 118, 0.05);
+  border-radius: 4px;
+  padding: 2rem 2.25rem;
+  transition: opacity 350ms cubic-bezier(0.16, 1, 0.3, 1), transform 350ms cubic-bezier(0.16, 1, 0.3, 1);
+  min-height: 520px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Wireframe Skeleton Transitions */
+.auth-skeleton-container {
+  min-height: 520px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.skeleton-shimmer {
+  background-color: rgba(38, 61, 55, 0.45);
+  border-radius: 2px;
+  animation: skeletonPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes skeletonPulse {
+  0% {
+    opacity: 0.35;
+    background-color: rgba(38, 61, 55, 0.35);
+  }
+  50% {
+    opacity: 0.75;
+    background-color: rgba(38, 61, 55, 0.65);
+  }
+  100% {
+    opacity: 0.35;
+    background-color: rgba(38, 61, 55, 0.35);
+  }
+}
+
+.auth-form-reveal {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 380ms ease, transform 380ms ease;
+}
+
+.auth-form-hidden {
+  opacity: 0;
+  transform: translateY(4px);
+  pointer-events: none;
+}
+
+/* Form Controls */
+.auth-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.72rem;
+  font-family: var(--font-mono, monospace);
+  color: var(--text-secondary, #869E96);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.4rem;
+  font-weight: 600;
+}
+
+.auth-input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.auth-input {
+  width: 100%;
+  background-color: var(--bg-control, #172622);
+  border: 1px solid var(--border-card, #263D37);
+  color: var(--text-primary, #F0FDF4);
+  font-family: var(--font-body, system-ui);
+  font-size: 0.88rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: 3px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  outline: none;
+}
+
+.auth-input:focus {
+  border-color: var(--accent-primary, #00E676);
+  box-shadow: 0 0 0 1px var(--accent-primary, #00E676);
+}
+
+.auth-input::placeholder {
+  color: var(--text-muted, #546E66);
+}
+
+.auth-toggle-pwd {
+  position: absolute;
+  right: 0.6rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: var(--text-secondary, #869E96);
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease;
+}
+
+.auth-toggle-pwd:hover {
+  color: var(--text-primary, #F0FDF4);
+}
+
+/* Submit Button & Transformation to Circle */
+.auth-btn-wrapper {
+  margin-top: 1.5rem;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.auth-submit-btn {
+  width: 100%;
+  height: 44px;
+  background-color: var(--accent-primary, #00E676);
+  color: #060A09;
+  border: 1px solid var(--accent-primary, #00E676);
+  border-radius: 3px;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  position: relative;
+  overflow: hidden;
+  transition: width 300ms cubic-bezier(0.4, 0, 0.2, 1),
+              border-radius 300ms cubic-bezier(0.4, 0, 0.2, 1),
+              background-color 200ms ease,
+              border-color 200ms ease,
+              color 200ms ease;
+}
+
+.auth-submit-btn:hover:not(:disabled) {
+  background-color: #00FF85;
+  box-shadow: 0 2px 10px rgba(0, 230, 118, 0.25);
+}
+
+.auth-submit-btn:disabled {
+  cursor: not-allowed;
+}
+
+/* State: Morphed Circular Spinner */
+.auth-submit-btn.btn-morphed-loading {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  padding: 0;
+  background-color: var(--bg-elevated, #1A2925);
+  border-color: var(--accent-primary, #00E676);
+  color: var(--accent-primary, #00E676);
+}
+
+/* State: Morphed Circular Success */
+.auth-submit-btn.btn-morphed-success {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  padding: 0;
+  background-color: var(--accent-primary, #00E676);
+  border-color: var(--accent-primary, #00E676);
+  color: #060A09;
+}
+
+/* Spinner Keyframes */
+@keyframes authSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.auth-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2.5px solid rgba(0, 230, 118, 0.25);
+  border-top-color: var(--accent-primary, #00E676);
+  border-radius: 50%;
+  animation: authSpin 0.75s linear infinite;
+}
+
+/* Pending Screen */
+.auth-pending-card {
+  background-color: var(--bg-card, #131E1B);
+  border: 1px solid var(--border-card, #263D37);
+  border-radius: 4px;
+  padding: 2rem 2.25rem;
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+}
+
+/* Reduced Motion Compliance */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-shimmer {
+    animation: none;
+    opacity: 0.5;
+  }
+  .auth-card,
+  .auth-form-reveal,
+  .auth-submit-btn {
+    transition: none !important;
+  }
+  .auth-spinner {
+    animation-duration: 2s;
+  }
+}

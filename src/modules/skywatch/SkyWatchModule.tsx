@@ -21,6 +21,9 @@ import {
   selectRankedThreatQueue,
 } from '../../selectors';
 import { formatIST } from '../../utils/time';
+import { formatRuleLabel } from '../../utils/rules';
+import { formatSpeed, formatAltitude } from '../../utils/units';
+import { classifyTrack, TRACK_CLASSIFICATION_LABELS } from '../../utils/trackClassification';
 
 interface SkyWatchModuleProps {
   tracks: TelemetryTrack[];
@@ -395,13 +398,13 @@ export const SkyWatchModule: React.FC<SkyWatchModuleProps> = ({
                 >
                   <div>
                     <div className="numeral" style={{ fontWeight: 700, fontFamily: 'var(--font-numerals)' }}>
-                      {activeThreat.altitude} m
+                      {formatAltitude(activeThreat.altitude)}
                     </div>
                     <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)' }}>Altitude (MSL)</div>
                   </div>
                   <div>
                     <div className="numeral" style={{ fontWeight: 700, fontFamily: 'var(--font-numerals)' }}>
-                      {Math.round(activeThreat.speed)} km/h
+                      {formatSpeed(activeThreat.speed)}
                     </div>
                     <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)' }}>Airspeed</div>
                   </div>
@@ -535,8 +538,11 @@ export const SkyWatchModule: React.FC<SkyWatchModuleProps> = ({
                         >
                           {alert.severity}
                         </span>
-                        <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-                          {alert.ruleName}
+                        <span
+                          title={alert.ruleName}
+                          style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-primary)' }}
+                        >
+                          {formatRuleLabel(alert.ruleName)}
                         </span>
                       </div>
 
@@ -614,13 +620,16 @@ export const SkyWatchModule: React.FC<SkyWatchModuleProps> = ({
               />
               <span
                 style={{
-                  fontSize: '0.68rem',
+                  fontSize: '0.72rem',
                   fontFamily: 'var(--font-heading)',
-                  fontWeight: 700,
+                  fontWeight: 600,
                   color: isSimPaused ? 'var(--color-warn)' : 'var(--color-ok)',
                 }}
               >
-                {isSimPaused ? 'PAUSED' : 'LIVE RADAR'}
+                {isSimPaused ? 'Paused' : 'Simulation running'}
+              </span>
+              <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
+                (Simulated data)
               </span>
             </div>
 
@@ -650,7 +659,7 @@ export const SkyWatchModule: React.FC<SkyWatchModuleProps> = ({
               fontWeight: 600,
             }}
           >
-            Alert: {openAlerts[0].trackCallsign} breached {openAlerts[0].ruleName} ({formatIST(openAlerts[0].timestamp, { seconds: false })})
+            Alert: {openAlerts[0].trackCallsign} breached {formatRuleLabel(openAlerts[0].ruleName)} ({formatIST(openAlerts[0].timestamp, { seconds: false })})
           </div>
         )}
       </footer>

@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0c121e"/>
+      <stop offset="100%" stop-color="#05080f"/>
+    </linearGradient>
+    <linearGradient id="primary" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#00ffcc"/>
+      <stop offset="100%" stop-color="#3b82f6"/>
+    </linearGradient>
+    <radialGradient id="radar" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="rgba(0, 255, 204, 0.25)"/>
+      <stop offset="70%" stop-color="rgba(0, 255, 204, 0.05)"/>
+      <stop offset="100%" stop-color="transparent"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background Shield / Squircle -->
+  <rect width="512" height="512" rx="108" fill="url(#bg)"/>
+  <rect width="504" height="504" x="4" y="4" rx="104" fill="none" stroke="url(#primary)" stroke-width="6" stroke-opacity="0.5"/>
+
+  <!-- Radar Grid Rings -->
+  <circle cx="256" cy="256" r="180" fill="none" stroke="#1f2c42" stroke-width="2" stroke-dasharray="8 8"/>
+  <circle cx="256" cy="256" r="120" fill="url(#radar)" stroke="#2b3d5c" stroke-width="3"/>
+  <circle cx="256" cy="256" r="60" fill="none" stroke="#3b82f6" stroke-width="2"/>
+
+  <!-- Crosshairs -->
+  <line x1="256" y1="56" x2="256" y2="456" stroke="#25354e" stroke-width="2"/>
+  <line x1="56" y1="256" x2="456" y2="256" stroke="#25354e" stroke-width="2"/>
+
+  <!-- Tactical Chevron / Hawk Symbol -->
+  <polygon points="256,96 140,320 256,270 372,320" fill="url(#primary)" filter="drop-shadow(0 0 12px rgba(0,255,204,0.6))"/>
+
+  <!-- Center Core Beacon -->
+  <circle cx="256" cy="256" r="10" fill="#00ffcc"/>
+  <circle cx="256" cy="256" r="18" fill="none" stroke="#00ffcc" stroke-width="2"/>
+
+  <!-- Tactical HUD Marks -->
+  <polyline points="96,136 96,96 136,96" fill="none" stroke="#00ffcc" stroke-width="4"/>
+  <polyline points="416,136 416,96 376,96" fill="none" stroke="#00ffcc" stroke-width="4"/>
+  <polyline points="96,376 96,416 136,416" fill="none" stroke="#00ffcc" stroke-width="4"/>
+  <polyline points="416,376 416,416 376,416" fill="none" stroke="#00ffcc" stroke-width="4"/>
+</svg>

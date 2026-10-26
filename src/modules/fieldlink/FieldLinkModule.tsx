@@ -22,6 +22,7 @@ import { TacticalMap } from '../../components/TacticalMap';
 import { api } from '../../services/api/apiClient';
 import { selectPendingOutbox, selectSyncedIncidents } from '../../selectors';
 import { formatIST } from '../../utils/time';
+import { syncManager } from '../../services/sync/syncManager';
 
 interface FieldLinkModuleProps {
   incidents: IncidentReport[];
@@ -157,6 +158,7 @@ export const FieldLinkModule: React.FC<FieldLinkModuleProps> = ({
       };
 
       await api.createIncident(newReport);
+      await syncManager.recordLocalMutation('incident', 'create', newReport);
       await onRefreshIncidents();
       setTitle('');
       setNotes('');
@@ -606,7 +608,7 @@ export const FieldLinkModule: React.FC<FieldLinkModuleProps> = ({
                     Pending Outbox Queue
                   </span>
                   <span style={{ fontSize: '0.72rem', color: 'var(--color-ink-2)' }}>
-                    IndexedDB Local Store
+                    Saved on this device
                   </span>
                 </div>
 
@@ -708,10 +710,10 @@ export const FieldLinkModule: React.FC<FieldLinkModuleProps> = ({
                   <span>{isSyncing ? 'Synchronizing...' : 'Sync outbox now'}</span>
                 </button>
 
-                <div style={{ fontSize: '0.7rem', color: 'var(--color-ink-2)', textAlign: 'center', marginTop: '4px' }}>
+                <div style={{ fontSize: '0.72rem', color: 'var(--color-ink-2)', textAlign: 'center', marginTop: '4px' }}>
                   {isOfflineMode
-                    ? 'Offline mode active: Records persisted locally in IndexedDB.'
-                    : 'Command link active: Client ID reconciliation enabled.'}
+                    ? 'Offline mode: Records saved on this device.'
+                    : 'Connected. Reports synced.'}
                 </div>
               </div>
             ) : activeTab === 'incidents' ? (
@@ -747,30 +749,46 @@ export const FieldLinkModule: React.FC<FieldLinkModuleProps> = ({
                         <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--color-ink)' }}>
                           {inc.title}
                         </span>
-                        <span
-                          style={{
-                            fontSize: '0.64rem',
-                            fontWeight: 700,
-                            padding: '1px 5px',
-                            borderRadius: '2px',
-                            border: `1px solid ${
-                              inc.priority === 'critical'
-                                ? 'var(--color-crit)'
-                                : inc.priority === 'high'
-                                ? 'var(--color-warn)'
-                                : 'var(--color-ok)'
-                            }`,
-                            color:
-                              inc.priority === 'critical'
-                                ? 'var(--color-crit)'
-                                : inc.priority === 'high'
-                                ? 'var(--color-warn)'
-                                : 'var(--color-ok)',
-                            textTransform: 'uppercase',
-                          }}
-                        >
-                          {inc.priority}
-                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <span
+                            style={{
+                              fontSize: '0.60rem',
+                              fontWeight: 700,
+                              padding: '1px 5px',
+                              borderRadius: '2px',
+                              border: `1px solid ${inc.syncStatus === 'pending' || inc.syncStatus === 'failed' ? '#E8590C' : '#2D7A33'}`,
+                              color: inc.syncStatus === 'pending' || inc.syncStatus === 'failed' ? '#FF922B' : '#69DB7C',
+                              background: inc.syncStatus === 'pending' || inc.syncStatus === 'failed' ? 'rgba(232, 89, 12, 0.15)' : 'rgba(45, 122, 51, 0.15)',
+                              textTransform: 'uppercase',
+                            }}
+                          >
+                            {inc.syncStatus === 'pending' ? 'LOCAL PENDING' : inc.syncStatus === 'failed' ? 'SYNC FAILED' : 'SERVER CONFIRMED'}
+                          </span>
+                          <span
+                            style={{
+                              fontSize: '0.64rem',
+                              fontWeight: 700,
+                              padding: '1px 5px',
+                              borderRadius: '2px',
+                              border: `1px solid ${
+                                inc.priority === 'critical'
+                                  ? 'var(--color-crit)'
+                                  : inc.priority === 'high'
+                                  ? 'var(--color-warn)'
+                                  : 'var(--color-ok)'
+                              }`,
+                              color:
+                                inc.priority === 'critical'
+                                  ? 'var(--color-crit)'
+                                  : inc.priority === 'high'
+                                  ? 'var(--color-warn)'
+                                  : 'var(--color-ok)',
+                              textTransform: 'uppercase',
+                            }}
+                          >
+                            {inc.priority}
+                          </span>
+                        </div>
                       </div>
 
                       <div style={{ fontSize: '0.72rem', color: 'var(--color-ink-2)' }}>

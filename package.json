@@ -11,7 +11,7 @@
     "build:frontend": "tsc && vite build",
     "start": "node -e 'const fs=require(\"fs\");if(!fs.existsSync(\"server/dist/server/src/index.js\")){require(\"child_process\").execSync(\"npm run build:server\",{stdio:\"inherit\"})}' && npm run start --prefix server",
     "start:server": "npm run start --prefix server",
-    "test": "node src/tests/frontend-contracts.test.js && npx tsx tests/simulation.test.ts && npx tsx tests/fieldlink-messaging.test.ts",
+    "test": "node src/tests/frontend-contracts.test.js && npx tsx tests/simulation.test.ts && npx tsx tests/fieldlink-messaging.test.ts && npx tsx tests/offline-sync.test.ts",
     "test:server": "npm run test --prefix server",
     "test:algorithms": "npx tsx -e \"import { runAllAlgorithmTests } from './tests/algorithms.test.ts'; const res = runAllAlgorithmTests(); console.log(res.logs.join('\\n')); if (res.passed !== res.total) process.exit(1);\"",
     "test:demo": "npx tsx tests/demonstration.ts",

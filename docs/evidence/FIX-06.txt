@@ -1,0 +1,10 @@
+$ npx tsx tests/fixes/fix06_numeric_safety.test.ts
+--- TEST FIX-06: Numeric safety and sanitization ---
+[NumericSafety] Division guarded: 10 / 0. Fallback: 0
+[NumericSafety] Invalid lat: NaN. Using fallback 34.05
+[NumericSafety] Invalid lng: NaN. Using fallback -118.25
+[NumericSafety] Invalid heading encountered: NaN. Replaced with 90.
+[NumericSafety] Invalid speed encountered: NaN. Replaced with 60.
+[NumericSafety] Invalid altitude encountered: NaN. Replaced with 500.
+[NumericSafety] Invalid threat score encountered: NaN. Replaced with 25.
+FIX-06 10,000 TEST CASES PASSED!

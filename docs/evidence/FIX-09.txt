@@ -1,0 +1,3 @@
+$ npx tsx tests/fixes/fix09_time_stepping.test.ts
+--- TEST FIX-09: Simulation time stepping & accumulator ---
+FIX-09 TIME STEPPING TESTS PASSED!

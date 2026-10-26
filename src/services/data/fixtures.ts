@@ -8,6 +8,7 @@ import {
   RoadHazardEdge,
   EvacuationNode,
 } from '@shared/types';
+import { formatSpeed, formatSpeedKmh } from '../../utils/units';
 
 // Deterministic baseline fixtures for SENTINEL demo
 export const INITIAL_INCIDENTS: IncidentReport[] = [
@@ -154,7 +155,7 @@ export const INITIAL_ALERTS: AirspaceAlert[] = [
     ruleName: 'NO_FLY_ZONE_INCURSION',
     observedValue: 'Incursion distance: 0.4km inside perimeter',
     threshold: '0.0km (Strict Zero-Tolerance)',
-    explanation: 'Track breached the Sector HQ Protected Airspace perimeter while moving at 151 km/h without authorized squawk identifier.',
+    explanation: `Track breached the Sector HQ Protected Airspace perimeter while moving at ${formatSpeedKmh(151)} without authorized squawk identifier.`,
     timestamp: new Date(Date.now() - 5 * 60000).toISOString(),
     acknowledged: false,
     isSimulated: true,
@@ -165,8 +166,8 @@ export const INITIAL_ALERTS: AirspaceAlert[] = [
     trackCallsign: 'INTRUDER-HIGH-SPD',
     severity: 'high',
     ruleName: 'RAPID_ACCELERATION_SPIKE',
-    observedValue: 'Velocity: 280 km/h',
-    threshold: '180 km/h civil UAS limit',
+    observedValue: `Velocity: 78 m/s (${formatSpeed(78)})`,
+    threshold: '50 m/s civil UAS limit',
     explanation: 'Target exceeded standard unmanned acoustic signature speed threshold by 56% within 15 seconds.',
     timestamp: new Date(Date.now() - 14 * 60000).toISOString(),
     acknowledged: true,

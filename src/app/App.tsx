@@ -29,17 +29,20 @@ import { Dashboard } from '../dashboard/Dashboard';
 import { FieldLinkModule } from '../modules/fieldlink/FieldLinkModule';
 import { SkyWatchModule } from '../modules/skywatch/SkyWatchModule';
 import { GeoIntelModule } from '../modules/geointel/GeoIntelModule';
-import { MediRouteModule } from '../modules/mediroute/MediRouteModule';
 import { SoldierVitalsModule } from '../modules/vitals/SoldierVitalsModule';
 import { MediRouteSubTab } from '../modules/mediroute/medirouteTypes';
+import { MediRouteModule } from '../modules/mediroute/MediRouteModule';
+import { VitalWatchModule } from '../modules/vitalwatch/VitalWatchModule';
+import { AddPersonnelModal } from '../modules/auth/AddPersonnelModal';
+import { UserProfile } from '@shared/types';
 import { realtimeService, RealtimeState } from '../services/api/realtimeService';
+import { syncManager } from '../services/sync/syncManager';
 import { selectPendingOutbox, selectOpenAlerts } from '../selectors';
-import { Layers, Radio, Crosshair, Compass, HeartPulse, Activity } from 'lucide-react';
-import { TacticalSkeletonWireframe } from '../components/TacticalSkeletonWireframe';
+import { Layers, Radio, Crosshair, Compass, HeartPulse, Activity, Shield } from 'lucide-react';
 
-export type ModuleId = 'dashboard' | 'fieldlink' | 'skywatch' | 'geointel' | 'mediroute' | 'vitals';
+export type ModuleId = 'dashboard' | 'fieldlink' | 'skywatch' | 'geointel' | 'mediroute' | 'vitals' | 'vitalwatch' | 'auth';
 
-export const VALID_MODULES: readonly ModuleId[] = ['dashboard', 'fieldlink', 'skywatch', 'geointel', 'mediroute', 'vitals'] as const;
+export const VALID_MODULES: readonly ModuleId[] = ['dashboard', 'fieldlink', 'skywatch', 'geointel', 'mediroute', 'vitals', 'vitalwatch'] as const;
 
 export const DEFAULT_INITIAL_SUMMARY: DashboardSummary = {
   systemStatus: 'nominal',
@@ -57,10 +60,10 @@ export const DEFAULT_INITIAL_SUMMARY: DashboardSummary = {
 export function parseModuleFromHash(hash: string): { module: ModuleId; subTab?: MediRouteSubTab } {
   const clean = hash.replace(/^#\/?/, '').toLowerCase().trim();
   const parts = clean.split('/');
-  const base = parts[0];
+  const base = ['login', 'signup', 'auth'].includes(parts[0]) ? 'dashboard' : parts[0];
   const sub = parts[1] as MediRouteSubTab | undefined;
 
-  const validSubTabs: MediRouteSubTab[] = ['overview', 'triage', 'routing', 'facilities', 'dispatch'];
+  const validSubTabs: MediRouteSubTab[] = ['overview', 'monitoring', 'triage', 'routing', 'facilities', 'dispatch'];
 
   if ((VALID_MODULES as readonly string[]).includes(base)) {
     return {
@@ -71,7 +74,7 @@ export function parseModuleFromHash(hash: string): { module: ModuleId; subTab?: 
   return { module: 'dashboard' };
 }
 
-export const App: React.FC = () => {
+export const App: React.FC<{ currentUser: UserProfile; onSignOut: () => void }> = ({ currentUser, onSignOut }) => {
   const [activeModule, setActiveModuleState] = useState<ModuleId>(() => {
     if (typeof window !== 'undefined') {
       return parseModuleFromHash(window.location.hash).module;
@@ -129,40 +132,13 @@ export const App: React.FC = () => {
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
+  const [isAddPersonnelOpen, setIsAddPersonnelOpen] = useState(false);
+  const handleSignOut = onSignOut;
+
   const [isOfflineMode, setIsOfflineMode] = useState<boolean>(false);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
-
-  // Tactical Skeleton Wireframe States (2s Initial Load & 250ms Async Fallback)
-  const [isInitialLoading, setIsInitialLoading] = useState<boolean>(true);
-  const [isSkeletonFadingOut, setIsSkeletonFadingOut] = useState<boolean>(false);
-  const [isFallbackWireframe, setIsFallbackWireframe] = useState<boolean>(false);
-  const [isFallbackFadingOut, setIsFallbackFadingOut] = useState<boolean>(false);
-
-  // Exact 2.0s initial loading wireframe, followed by seamless 240ms reveal handshake
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsSkeletonFadingOut(true);
-      setTimeout(() => {
-        setIsInitialLoading(false);
-      }, 240);
-    }, 2000);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  const handleSimulateSlowLoad = useCallback((durationMs = 2000) => {
-    setIsFallbackFadingOut(false);
-    setIsFallbackWireframe(true);
-    setTimeout(() => {
-      setIsFallbackFadingOut(true);
-      setTimeout(() => {
-        setIsFallbackWireframe(false);
-        setIsFallbackFadingOut(false);
-      }, 240);
-    }, durationMs);
-  }, []);
 
   // App Shell States & Persistence
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
@@ -235,13 +211,6 @@ export const App: React.FC = () => {
 
   // 1. Initial Database Seed & Resilient Load (Uses Promise.allSettled so failures never block UI)
   const refreshAllData = useCallback(async () => {
-    let slowFallbackTriggered = false;
-    const fallbackTimer = setTimeout(() => {
-      slowFallbackTriggered = true;
-      setIsFallbackFadingOut(false);
-      setIsFallbackWireframe(true);
-    }, 250);
-
     try {
       const results = await Promise.allSettled([
         api.getDashboardSummary(),
@@ -281,15 +250,7 @@ export const App: React.FC = () => {
     } catch (err) {
       console.error('Error refreshing SENTINEL data:', err);
     } finally {
-      clearTimeout(fallbackTimer);
       setIsLoading(false);
-      if (slowFallbackTriggered) {
-        setIsFallbackFadingOut(true);
-        setTimeout(() => {
-          setIsFallbackWireframe(false);
-          setIsFallbackFadingOut(false);
-        }, 240);
-      }
     }
   }, []);
 
@@ -348,6 +309,7 @@ export const App: React.FC = () => {
       unsubGeo();
       unsubPatient();
       unsubReset();
+      realtimeService.disconnect();
     };
   }, [isOfflineMode, refreshAllData]);
 
@@ -457,11 +419,10 @@ export const App: React.FC = () => {
     if (isOfflineMode) return;
     setIsSyncing(true);
     try {
-      await Promise.all([api.syncPendingQueue(), api.syncPendingGeoObservations()]);
+      await syncManager.triggerSync();
       await refreshAllData();
     } catch (err: any) {
       console.warn('Sync issue:', err);
-      alert(`Sync failed: ${err.message}`);
     } finally {
       setIsSyncing(false);
     }
@@ -541,6 +502,53 @@ export const App: React.FC = () => {
   const pendingSyncCount = selectPendingOutbox(incidents).length;
   const unackAlertsCount = selectOpenAlerts(alerts).length;
 
+  if (isLoading) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '100vh',
+          backgroundColor: 'var(--surface)',
+          color: 'var(--text-primary)',
+          fontFamily: 'var(--font-sans)',
+          gap: '16px',
+        }}
+      >
+        <div
+          style={{
+            width: '48px',
+            height: '48px',
+            borderRadius: 'var(--radius-pill)',
+            background: 'var(--surface-raised)',
+            boxShadow: 'var(--shadow-raised)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <div
+            style={{
+              width: '16px',
+              height: '16px',
+              borderRadius: '50%',
+              background: 'var(--accent)',
+              boxShadow: '0 0 10px rgba(70, 105, 168, 0.6)',
+            }}
+          />
+        </div>
+        <div style={{ letterSpacing: '0.04em', fontSize: '1rem', fontWeight: 700 }}>
+          INITIALIZING SENTINEL NEUMORPHIC CONSOLE...
+        </div>
+        <div style={{ color: 'var(--text-secondary)', fontSize: '0.78rem' }}>
+          Mounting IndexedDB stores and deterministic scenario fixtures
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className={`app-shell ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}
@@ -569,12 +577,14 @@ export const App: React.FC = () => {
         onCloseMobile={() => setIsMobileMenuOpen(false)}
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={handleToggleSidebarCollapse}
-        medirouteSubTab={medirouteSubTab}
-        onSelectMediRouteSubTab={handleNavigateMediRouteSubTab}
+        currentUser={currentUser}
+        onSignOut={handleSignOut}
+        onOpenAddPersonnel={() => setIsAddPersonnelOpen(true)}
       />
 
       {/* 2. Sticky Command Header */}
       <CommandHeader
+        currentUser={currentUser}
         activeModule={activeModule}
         pendingSyncCount={pendingSyncCount}
         isOfflineMode={isOfflineMode}
@@ -595,119 +605,84 @@ export const App: React.FC = () => {
         onToggleHeaderMinimized={handleToggleHeaderMinimized}
         realtimeStatus={isOfflineMode ? 'disconnected' : realtimeState.status}
         lastEventTimestamp={realtimeState.lastEventTimestamp}
-        onSimulateSlowLoad={handleSimulateSlowLoad}
       />
 
       {/* 3. Main Content Area */}
-      <main
-        className="app-main"
-        style={{
-          padding: 0,
-          position: 'relative',
-          overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column',
-          minHeight: 'calc(100vh - var(--header-height))',
-        }}
-      >
-        {/* Tactical Skeleton Wireframe Fallback / Initial Loading Layer (2s on Load, 250ms Fallback) */}
-        {(isInitialLoading || isFallbackWireframe) && (
-          <div
-            className={isSkeletonFadingOut || isFallbackFadingOut ? 'wireframe-fade-out' : 'wireframe-fade-in'}
-            style={{
-              position: 'absolute',
-              inset: 0,
-              zIndex: 40,
-              display: 'flex',
-              flexDirection: 'column',
-              background: '#121614',
-            }}
-          >
-            <TacticalSkeletonWireframe />
-          </div>
-        )}
+      <main className="app-main" style={{ padding: 0 }}>
+            {activeModule === 'dashboard' && (
+              <Dashboard
+                summary={summary}
+                incidents={incidents}
+                tracks={tracks}
+                alerts={alerts}
+                zones={zones}
+                observations={observations}
+                casualties={casualties}
+                hazards={hazards}
+                nodes={EVACUATION_NODES}
+                onNavigate={handleNavigate}
+                onNavigateMediRouteSubTab={handleNavigateMediRouteSubTab}
+                onResetDemo={handleResetDemo}
+                isOfflineMode={isOfflineMode}
+                realtimeStatus={isOfflineMode ? 'disconnected' : realtimeState.status}
+                lastEventTimestamp={realtimeState.lastEventTimestamp}
+                backendHealth={backendHealth}
+                onStepSimulation={handleStepSimulation}
+                onToggleSimulationPause={handleToggleSimPause}
+                isSimPaused={isSimPaused}
+              />
+            )}
 
-        {/* Operational Modules View (Reveals over 240ms with Zero Layout Shift) */}
-        <div
-          className={`tactical-view-enter ${isInitialLoading || isFallbackWireframe ? 'wireframe-fade-out' : 'wireframe-fade-in'}`}
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            flex: 1,
-            minHeight: 0,
-            height: '100%',
-          }}
-        >
-          {activeModule === 'dashboard' && (
-          <Dashboard
-            summary={summary}
-            incidents={incidents}
-            tracks={tracks}
-            alerts={alerts}
-            zones={zones}
-            observations={observations}
-            casualties={casualties}
-            hazards={hazards}
-            nodes={EVACUATION_NODES}
-            onNavigate={handleNavigate}
-            onNavigateMediRouteSubTab={handleNavigateMediRouteSubTab}
-            onResetDemo={handleResetDemo}
-            isOfflineMode={isOfflineMode}
-            realtimeStatus={isOfflineMode ? 'disconnected' : realtimeState.status}
-            lastEventTimestamp={realtimeState.lastEventTimestamp}
-            backendHealth={backendHealth}
-            onStepSimulation={handleStepSimulation}
-            onToggleSimulationPause={handleToggleSimPause}
-            isSimPaused={isSimPaused}
-          />
-        )}
+            {activeModule === 'fieldlink' && (
+              <FieldLinkModule
+                incidents={incidents}
+                isOfflineMode={isOfflineMode}
+                onRefreshIncidents={refreshAllData}
+                onTriggerSync={handleTriggerSync}
+                isSyncing={isSyncing}
+                onToggleSimulationPause={handleToggleSimPause}
+                isSimPaused={isSimPaused}
+              />
+            )}
 
-        {activeModule === 'fieldlink' && (
-          <FieldLinkModule
-            incidents={incidents}
-            isOfflineMode={isOfflineMode}
-            onRefreshIncidents={refreshAllData}
-            onTriggerSync={handleTriggerSync}
-            isSyncing={isSyncing}
-            onToggleSimulationPause={handleToggleSimPause}
-            isSimPaused={isSimPaused}
-          />
-        )}
+            {activeModule === 'skywatch' && (
+              <SkyWatchModule
+                tracks={tracks}
+                alerts={alerts}
+                zones={zones}
+                onRefreshAlerts={refreshAllData}
+                onStepSimulation={handleStepSimulation}
+                onToggleSimulationPause={handleToggleSimPause}
+                isSimPaused={isSimPaused}
+              />
+            )}
 
-        {activeModule === 'skywatch' && (
-          <SkyWatchModule
-            tracks={tracks}
-            alerts={alerts}
-            zones={zones}
-            onRefreshAlerts={refreshAllData}
-            onStepSimulation={handleStepSimulation}
-            onToggleSimulationPause={handleToggleSimPause}
-            isSimPaused={isSimPaused}
-          />
-        )}
+            {activeModule === 'geointel' && (
+              <GeoIntelModule
+                observations={observations}
+                onRefreshObservations={refreshAllData}
+              />
+            )}
 
-        {activeModule === 'geointel' && (
-          <GeoIntelModule
-            observations={observations}
-            onRefreshObservations={refreshAllData}
-          />
-        )}
+            {activeModule === 'mediroute' && (
+              <MediRouteModule
+                initialSubTab={medirouteSubTab}
+                onSubTabChange={handleNavigateMediRouteSubTab}
+                casualties={casualties}
+                hazards={hazards}
+                nodes={EVACUATION_NODES}
+                onRefreshCasualties={refreshAllData}
+                onRefreshHazards={refreshAllData}
+                onToggleSimulationPause={handleToggleSimPause}
+                isSimPaused={isSimPaused}
+              />
+            )}
 
-        {activeModule === 'mediroute' && (
-          <MediRouteModule
-            casualties={casualties}
-            hazards={hazards}
-            nodes={EVACUATION_NODES}
-            onRefreshCasualties={refreshAllData}
-            onRefreshHazards={refreshAllData}
-            onToggleSimulationPause={handleToggleSimPause}
-            isSimPaused={isSimPaused}
-            initialSubTab={medirouteSubTab}
-            onSubTabChange={handleNavigateMediRouteSubTab}
-          />
-        )}
-        {activeModule === 'vitals' && <SoldierVitalsModule />}
-        </div>
+            {activeModule === 'vitalwatch' && (
+              <VitalWatchModule currentUser={currentUser} />
+            )}
+
+            {activeModule === 'vitals' && <SoldierVitalsModule />}
       </main>
 
       {/* Mobile Bottom Dock (< 768px) */}
@@ -787,13 +762,30 @@ export const App: React.FC = () => {
 
         <button
           type="button"
+          className={`mobile-dock-item ${activeModule === 'vitalwatch' ? 'active' : ''}`}
+          onClick={() => handleNavigate('vitalwatch')}
+        >
+          <Activity size={18} />
+          <span>VitalWatch</span>
+        </button>
+
+        <button
+          type="button"
           className={`mobile-dock-item ${activeModule === 'vitals' ? 'active' : ''}`}
           onClick={() => handleNavigate('vitals')}
         >
-          <Activity size={18} />
+          <Shield size={18} />
           <span>Vitals</span>
         </button>
       </nav>
+
+      {/* Authorized Officer Add Personnel Workflow Modal */}
+      <AddPersonnelModal
+        isOpen={isAddPersonnelOpen}
+        onClose={() => setIsAddPersonnelOpen(false)}
+        currentUserRole={currentUser?.role || 'admin'}
+        onPersonnelAdded={() => refreshAllData()}
+      />
     </div>
   );
 };

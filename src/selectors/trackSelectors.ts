@@ -1,10 +1,15 @@
 import { TelemetryTrack, RestrictedAirspaceZone, AirspaceAlert } from '@shared/types';
+import { classifyTrack, TRACK_CLASSIFICATION_LABELS, TrackClassification } from '../utils/trackClassification';
+import { formatSpeed, formatAltitude } from '../utils/units';
+import { clampThreatScore } from '../utils/numericSafety';
 
 export interface RankedTrackThreat {
   id: string;
   callsign: string;
   type: string;
   status: string;
+  classification: TrackClassification;
+  classificationLabel: string;
   score: number;
   reason: string;
   severity: 'critical' | 'high' | 'medium' | 'low';
@@ -22,12 +27,26 @@ export function calculateTrackThreatScore(
   track: TelemetryTrack,
   zones: RestrictedAirspaceZone[] = [],
   alerts: AirspaceAlert[] = []
-): { score: number; reason: string; severity: 'critical' | 'high' | 'medium' | 'low'; hasBreach: boolean } {
+): { score: number; reason: string; severity: 'critical' | 'high' | 'medium' | 'low'; hasBreach: boolean; classification: TrackClassification } {
+  const classification = classifyTrack(track as any);
+  const isFriendlyOrCivilian = classification === 'FRIENDLY' || classification === 'CIVILIAN';
+
+  if (isFriendlyOrCivilian) {
+    return {
+      score: 10,
+      reason: `${TRACK_CLASSIFICATION_LABELS[classification]} - Nominal authorized transit`,
+      severity: 'low',
+      hasBreach: false,
+      classification
+    };
+  }
+
   // Base baseline score
   let score = 10;
   const reasons: string[] = [];
 
   const isHostileOrSuspicious =
+    classification === 'HOSTILE' ||
     track.status === 'hostile' ||
     track.status === 'suspicious' ||
     track.type === 'stealth_incursion' ||
@@ -41,13 +60,13 @@ export function calculateTrackThreatScore(
   // Kinematic speed check (> 60 m/s or km/h)
   if (track.speed > 60) {
     score += 20;
-    reasons.push(`High velocity (${Math.round(track.speed)} km/h)`);
+    reasons.push(`High velocity (${formatSpeed(track.speed)})`);
   }
 
   // Low-altitude nap-of-the-earth flight (< 250 m)
   if (track.altitude < 250) {
     score += 15;
-    reasons.push(`Low altitude terrain-masking (${track.altitude}m)`);
+    reasons.push(`Low altitude terrain-masking (${formatAltitude(track.altitude)})`);
   }
 
   // Check geofence proximity/breach against active restricted zones
@@ -75,7 +94,7 @@ export function calculateTrackThreatScore(
     }
   }
 
-  const finalScore = Math.min(Math.max(score, 5), 99);
+  const finalScore = clampThreatScore(score);
 
   let severity: 'critical' | 'high' | 'medium' | 'low' = 'low';
   if (finalScore >= 80) severity = 'critical';
@@ -89,12 +108,14 @@ export function calculateTrackThreatScore(
     reason: reasonText,
     severity,
     hasBreach,
+    classification,
   };
 }
 
 /**
  * Builds the threat queue strictly from active telemetry tracks, ranked by threat score.
  * Never leaves mockup leftovers (e.g. "Track 07", "Swarm U1 to U4").
+ * Sorted by score descending, then id ascending for flicker-free stability (FIX-07).
  */
 export function selectRankedThreatQueue(
   tracks: TelemetryTrack[] = [],
@@ -109,6 +130,8 @@ export function selectRankedThreatQueue(
         callsign: track.callsign,
         type: track.type || 'unknown',
         status: track.status,
+        classification: evaluation.classification,
+        classificationLabel: TRACK_CLASSIFICATION_LABELS[evaluation.classification],
         score: evaluation.score,
         reason: evaluation.reason,
         severity: evaluation.severity,
@@ -118,5 +141,8 @@ export function selectRankedThreatQueue(
         track,
       };
     })
-    .sort((a, b) => b.score - a.score);
+    .sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      return a.id.localeCompare(b.id);
+    });
 }

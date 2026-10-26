@@ -1,0 +1,2 @@
+--- TEST FIX-03: Friendly tracks raise info entries & consistent 5-surface classification ---
+FIX-03 TESTS PASSED!

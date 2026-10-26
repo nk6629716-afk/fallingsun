@@ -3,9 +3,31 @@ import {
   TelemetryTrack,
   Alert,
   AnomalyRuleName,
-  isAnomalyRuleName,
 } from '../../../shared/types';
 import { eventBus } from '../realtime/eventBus';
+
+const VALID_ANOMALY_RULES: readonly AnomalyRuleName[] = [
+  'NO_FLY_ZONE_INCURSION',
+  'ZONE_INCURSION',
+  'RAPID_ACCELERATION_SPIKE',
+  'SUDDEN_ACCELERATION',
+  'UNUSUAL_ALTITUDE_DROP',
+  'FLIGHT_PATH_DEVIATION',
+  'ROUTE_DEVIATION',
+  'STALE_TELEMETRY_SIGNAL',
+  'STALE_TELEMETRY',
+  'speed_anomaly',
+  'route_deviation',
+  'restricted_zone_entry',
+  'stale_telemetry',
+] as const;
+
+function isAnomalyRuleName(rule: string): rule is AnomalyRuleName {
+  for (let i = 0; i < VALID_ANOMALY_RULES.length; i++) {
+    if (VALID_ANOMALY_RULES[i] === rule) return true;
+  }
+  return false;
+}
 
 export class TelemetryService {
   // Configured fictional restricted zone for demo
@@ -85,7 +107,7 @@ export class TelemetryService {
       const headingDeg = track.headingDeg ?? track.heading ?? 0;
       const speedKmPerMin = (speedKts * 1.852) / 60;
       const headingRad = (headingDeg * Math.PI) / 180;
-      
+
       const trackLat = track.position?.lat ?? track.lat ?? 0;
       const trackLng = track.position?.lng ?? track.lng ?? 0;
       const altitudeMeters = track.position?.altitudeMeters ?? track.altitude ?? 120;

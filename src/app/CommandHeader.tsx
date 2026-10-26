@@ -10,12 +10,12 @@ import {
 import { getLiveIST } from '../utils/time';
 import { createWavefrontRipple } from '../utils/motion';
 
-import { authService } from '../services/auth/authService';
-import { UserRole, UserProfile } from '@shared/types';
-import { Shield, ChevronDown } from 'lucide-react';
+import { UserProfile } from '@shared/types';
+import { Shield } from 'lucide-react';
 
 export interface CommandHeaderProps {
-  activeModule: 'dashboard' | 'fieldlink' | 'skywatch' | 'geointel' | 'mediroute' | 'vitals';
+  currentUser: UserProfile;
+  activeModule: 'dashboard' | 'fieldlink' | 'skywatch' | 'geointel' | 'mediroute' | 'vitals' | 'vitalwatch' | 'auth';
   pendingSyncCount: number;
   isOfflineMode: boolean;
   onToggleOffline: () => void;
@@ -39,6 +39,7 @@ export interface CommandHeaderProps {
 }
 
 export const CommandHeader: React.FC<CommandHeaderProps> = ({
+  currentUser,
   activeModule,
   pendingSyncCount,
   isOfflineMode,
@@ -69,30 +70,23 @@ export const CommandHeader: React.FC<CommandHeaderProps> = ({
     return () => clearInterval(interval);
   }, []);
 
-  const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => authService.getUser());
-  const [isRoleMenuOpen, setIsRoleMenuOpen] = useState(false);
   const [isOverflowOpen, setIsOverflowOpen] = useState(false);
-  const roleMenuRef = useRef<HTMLDivElement>(null);
   const overflowMenuRef = useRef<HTMLDivElement>(null);
 
   // Close menus on outside click or Escape key
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as Node;
-      if (roleMenuRef.current && !roleMenuRef.current.contains(target)) {
-        setIsRoleMenuOpen(false);
-      }
       if (overflowMenuRef.current && !overflowMenuRef.current.contains(target)) {
         setIsOverflowOpen(false);
       }
     };
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        setIsRoleMenuOpen(false);
         setIsOverflowOpen(false);
       }
     };
-    if (isRoleMenuOpen || isOverflowOpen) {
+    if (isOverflowOpen) {
       document.addEventListener('mousedown', handleClickOutside);
       document.addEventListener('keydown', handleKeyDown);
     }
@@ -100,20 +94,8 @@ export const CommandHeader: React.FC<CommandHeaderProps> = ({
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isRoleMenuOpen, isOverflowOpen]);
+  }, [isOverflowOpen]);
 
-  // Auth subscription
-  useEffect(() => {
-    const unsub = authService.subscribe((sess) => {
-      setCurrentUser(sess?.user || null);
-    });
-    return unsub;
-  }, []);
-
-  const handleRoleSwitch = (newRole: UserRole) => {
-    authService.demoLogin(newRole);
-    setIsRoleMenuOpen(false);
-  };
   const getModuleTitle = () => {
     switch (activeModule) {
       case 'dashboard':
@@ -141,6 +123,10 @@ export const CommandHeader: React.FC<CommandHeaderProps> = ({
           title: 'MediRoute Logistics',
           subtitle: 'Triage scoring and evacuation routing',
         };
+      case 'vitalwatch':
+        return { title: 'VitalWatch Health & GPS', subtitle: 'Personnel health and location' };
+      case 'auth':
+        return { title: 'Account', subtitle: 'Personnel access' };
       case 'vitals':
         return {
           title: 'Soldier Vitals',
@@ -291,95 +277,9 @@ export const CommandHeader: React.FC<CommandHeaderProps> = ({
             <span>RESET</span>
           </button>
 
-          {/* User Identity & Role Badge / Switcher */}
-          <div ref={roleMenuRef} style={{ position: 'relative' }}>
-            <button
-              type="button"
-              onClick={() => setIsRoleMenuOpen((prev) => !prev)}
-              aria-haspopup="true"
-              aria-expanded={isRoleMenuOpen}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '3px 8px',
-                borderRadius: 'var(--radius-sm)',
-                border: '1px solid rgba(0, 229, 255, 0.4)',
-                background: 'rgba(0, 229, 255, 0.1)',
-                color: '#00E5FF',
-                fontSize: '0.72rem',
-                fontWeight: 700,
-                cursor: 'pointer',
-              }}
-              title="Current RBAC clearance role. Click to switch roles or log in."
-            >
-              <Shield size={12} color="#00E5FF" />
-              <span>{currentUser?.callsign || currentUser?.role?.toUpperCase() || 'AUTH'}</span>
-              <span
-                style={{
-                  fontSize: '0.65rem',
-                  padding: '1px 4px',
-                  borderRadius: '2px',
-                  background: 'rgba(255,255,255,0.15)',
-                  color: '#FFFFFF',
-                }}
-              >
-                {currentUser?.role?.replace('_', ' ').toUpperCase()}
-              </span>
-              <ChevronDown size={11} />
-            </button>
-
-            {isRoleMenuOpen && (
-              <div
-                style={{
-                  position: 'absolute',
-                  top: 'calc(100% + 6px)',
-                  right: 0,
-                  background: '#141C28',
-                  border: '1px solid rgba(0, 229, 255, 0.3)',
-                  borderRadius: '6px',
-                  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.6)',
-                  padding: '8px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '4px',
-                  minWidth: '220px',
-                  zIndex: 200,
-                }}
-              >
-                <div style={{ fontSize: '0.7rem', color: '#8D9A8F', padding: '2px 6px', fontWeight: 600 }}>
-                  Switch Operational Clearance
-                </div>
-                {[
-                  { role: 'administrator' as UserRole, label: 'Administrator', desc: 'Full access & scenario controls' },
-                  { role: 'operations_officer' as UserRole, label: 'Operations Officer', desc: 'Incidents & SkyWatch' },
-                  { role: 'medical_officer' as UserRole, label: 'Medical Officer', desc: 'Triage & Soldier Vitals intake' },
-                  { role: 'read_only_viewer' as UserRole, label: 'Read-Only Viewer', desc: 'Observation only' },
-                ].map((item) => (
-                  <button
-                    key={item.role}
-                    type="button"
-                    onClick={() => handleRoleSwitch(item.role)}
-                    style={{
-                      textAlign: 'left',
-                      padding: '6px 8px',
-                      background: currentUser?.role === item.role ? 'rgba(0, 229, 255, 0.15)' : 'transparent',
-                      border: currentUser?.role === item.role ? '1px solid #00E5FF' : '1px solid transparent',
-                      borderRadius: '4px',
-                      color: '#FFFFFF',
-                      fontSize: '0.75rem',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <div style={{ fontWeight: 700, color: currentUser?.role === item.role ? '#00E5FF' : '#FFFFFF' }}>
-                      {item.label}
-                    </div>
-                    <div style={{ fontSize: '0.68rem', color: '#8D9A8F' }}>{item.desc}</div>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          <span className="badge" title={`Signed in as ${currentUser.name}`}>
+            <Shield size={12} /> {currentUser.callsign || currentUser.name} · {currentUser.role.replace(/_/g, ' ')}
+          </span>
         </div>
 
         {/* Sync Button */}

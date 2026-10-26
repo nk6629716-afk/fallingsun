@@ -7,7 +7,7 @@ dist/
 server/dist/
 
 # Persistent database storage & temp files
-data/
+/data/
 server/data/
 *.tmp*
 *.sqlite*

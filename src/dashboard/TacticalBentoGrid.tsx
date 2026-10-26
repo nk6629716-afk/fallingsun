@@ -1,3 +1,4 @@
+import { formatDurationMinutes, formatDistanceKm, formatSpeedKmh } from '../utils/units';
 import React, { useState } from 'react';
 import {
   Activity,
@@ -114,14 +115,14 @@ export const TacticalBentoGrid: React.FC<TacticalBentoGridProps> = ({
 
   // Evacuation Corridors transit and status telemetry
   const corridorData = [
-    { label: 'Hwy 9 Bypass', val: 0.35, eta: '11 min', dist: '6.8 km', status: 'CLEAR', speed: '48 km/h' },
-    { label: 'I-101 Corridor', val: 0.55, eta: '18 min', dist: '12.2 km', status: 'DEGRADED', speed: '32 km/h' },
-    { label: 'Bridge Alpha', val: 0.95, eta: '32 min', dist: '4.1 km', status: 'BLOCKED', speed: '0 km/h' },
-    { label: 'River Rd Link', val: 0.28, eta: '8 min', dist: '4.5 km', status: 'CLEAR', speed: '55 km/h' },
-    { label: 'Ridgeline Post', val: 0.44, eta: '14 min', dist: '8.9 km', status: 'CLEAR', speed: '42 km/h' },
-    { label: 'North Evac Ax', val: 0.38, eta: '12 min', dist: '7.4 km', status: 'CLEAR', speed: '50 km/h' },
-    { label: 'Hub Bravo Conn', val: 0.48, eta: '15 min', dist: '9.6 km', status: 'CLEAR', speed: '44 km/h' },
-    { label: 'Intake Charlie', val: 0.62, eta: '20 min', dist: '14.0 km', status: 'HEAVY TRAF', speed: '28 km/h' },
+    { label: 'Hwy 9 Bypass', val: 0.35, eta: formatDurationMinutes(11), dist: formatDistanceKm(6.8), status: 'CLEAR', speed: formatSpeedKmh(48) },
+    { label: 'I-101 Corridor', val: 0.55, eta: formatDurationMinutes(18), dist: formatDistanceKm(12.2), status: 'DEGRADED', speed: formatSpeedKmh(32) },
+    { label: 'Bridge Alpha', val: 0.95, eta: formatDurationMinutes(32), dist: formatDistanceKm(4.1), status: 'BLOCKED', speed: formatSpeedKmh(0) },
+    { label: 'River Rd Link', val: 0.28, eta: formatDurationMinutes(8), dist: formatDistanceKm(4.5), status: 'CLEAR', speed: formatSpeedKmh(55) },
+    { label: 'Ridgeline Post', val: 0.44, eta: formatDurationMinutes(14), dist: formatDistanceKm(8.9), status: 'CLEAR', speed: formatSpeedKmh(42) },
+    { label: 'North Evac Ax', val: 0.38, eta: formatDurationMinutes(12), dist: formatDistanceKm(7.4), status: 'CLEAR', speed: formatSpeedKmh(50) },
+    { label: 'Hub Bravo Conn', val: 0.48, eta: formatDurationMinutes(15), dist: formatDistanceKm(9.6), status: 'CLEAR', speed: formatSpeedKmh(44) },
+    { label: 'Intake Charlie', val: 0.62, eta: formatDurationMinutes(20), dist: formatDistanceKm(14.0), status: 'HEAVY TRAF', speed: formatSpeedKmh(28) },
   ];
 
   const handleToggleTask = (id: string) => {

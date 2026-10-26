@@ -1,3 +1,4 @@
+import { formatDurationMinutes } from '../utils/units';
 import React, { useState, useCallback, useRef, useMemo } from 'react';
 import {
   DashboardSummary,
@@ -298,7 +299,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   // Medical Activity ticker
   const latestActivity = useMemo(() => {
-    return 'Medevac Dispatch: AMB-02 en route to Field Hospital Alpha with CAS-0419 (Immediate) — ETA 11 min';
+    return `Medevac Dispatch: AMB-02 en route to Field Hospital Alpha with CAS-0419 (Immediate) — ETA ${formatDurationMinutes(11)}`;
   }, []);
 
   // Top-Left Metrics Panel (Medical Telemetry for COP Map)

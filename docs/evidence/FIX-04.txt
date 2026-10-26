@@ -1,0 +1,2 @@
+--- TEST FIX-04: Canonical Rule IDs and human labels ---
+FIX-04 TESTS PASSED!

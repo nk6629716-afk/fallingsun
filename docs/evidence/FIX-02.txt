@@ -1,0 +1,2 @@
+--- TEST FIX-02: Alerts never re-arm & zone hysteresis ---
+FIX-02 TESTS PASSED!

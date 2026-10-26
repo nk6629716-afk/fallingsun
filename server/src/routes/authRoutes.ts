@@ -39,8 +39,11 @@ authRouter.post('/login', async (req: AuthenticatedRequest, res: Response) => {
             expiresAt: data.session.expires_at,
             user: {
               id: user.id,
+              name: user.user_metadata?.name || user.email?.split('@')[0] || 'User',
               email: user.email,
               role,
+              status: 'approved',
+              createdAt: user.created_at || new Date().toISOString(),
               callsign: user.user_metadata?.callsign,
               unit: user.user_metadata?.unit,
             },
@@ -81,8 +84,11 @@ authRouter.post('/login', async (req: AuthenticatedRequest, res: Response) => {
 
   const user: UserProfile = {
     id: `usr-${role}-demo`,
+    name: `Demo ${role.replace('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase())}`,
     email: email || `${role}@sentinel.mil`,
     role,
+    status: 'approved',
+    createdAt: '2026-10-25T00:00:00.000Z',
     callsign: role === 'administrator' ? 'COMMAND-1' : role === 'operations_officer' ? 'TACTICAL-OPS' : role === 'medical_officer' ? 'MEDEVAC-LEAD' : 'OBSERVER-SIT',
     unit: role === 'medical_officer' ? 'Forward Triage & Health Monitoring' : 'Field Operations Group',
   };

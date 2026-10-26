@@ -1,0 +1,3 @@
+$ npx tsx tests/fixes/fix12_mesh_bus.test.ts
+--- TEST FIX-12: Single BroadcastChannel sentinel_mesh_bus and canonical envelope ---
+FIX-12 MESH BUS TESTS PASSED!
