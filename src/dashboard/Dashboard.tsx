@@ -124,7 +124,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       sourceModule: 'fieldlink',
       type: 'medical',
       priority: 'critical',
-      title: 'SOL-001 (Viper - Aarav): Critical Blast Hypoxemia',
+      title: 'SOL-001 (Aarav): Critical Blast Hypoxemia',
       notes: 'Hemodynamic compromise (BP: 88/54, HR: 136 bpm, SpO2: 88%). Rule 4 START Immediate. Priority Evac to Field Hospital Alpha.',
       location: { name: 'Forward Aid Station Bravo', lat: 34.065, lng: -118.238 },
       createdAt: new Date().toISOString(),
@@ -140,7 +140,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       {
         id: 'MED-ALT-1',
         trackId: 'SOL-001',
-        trackCallsign: 'SOL-001 (Viper - Aarav)',
+        trackCallsign: 'SOL-001 (Aarav)',
         ruleName: 'speed_anomaly',
         severity: 'critical',
         observedValue: 'HR: 136 bpm, SpO2: 88%',
@@ -183,7 +183,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const medicalTriageQueue = useMemo<ThreatItemData[]>(() => {
     const baseTrack: TelemetryTrack = {
       id: 'SOL-001',
-      callsign: 'SOL-001 (Viper - Aarav)',
+      callsign: 'SOL-001 (Aarav)',
       lat: 34.072,
       lng: -118.225,
       altitude: 0,
@@ -199,27 +199,27 @@ export const Dashboard: React.FC<DashboardProps> = ({
     return [
       {
         id: 'SOL-001',
-        callsign: 'SOL-001 (Viper - Aarav)',
+        callsign: 'SOL-001 (Aarav)',
         reason: 'Hemodynamic compromise (BP 88/54, HR 136, SpO2 88%). ALS Evac to Hospital Alpha.',
         score: 95,
         severity: 'critical',
         track: {
           ...baseTrack,
           id: 'SOL-001',
-          callsign: 'SOL-001 (Viper - Aarav)',
+          callsign: 'SOL-001 (Aarav)',
           threatScore: 95,
         },
       },
       {
         id: 'SOL-004',
-        callsign: 'SOL-004 (Titan - Diya)',
+        callsign: 'SOL-004 (Diya)',
         reason: 'Junctional hemorrhage (HR 142 bpm, BP 82/50, 35.2°C). Hemostatic gauze applied.',
         score: 88,
         severity: 'critical',
         track: {
           ...baseTrack,
           id: 'SOL-004',
-          callsign: 'SOL-004 (Titan - Diya)',
+          callsign: 'SOL-004 (Diya)',
           threatScore: 88,
         },
       },
@@ -238,14 +238,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
       },
       {
         id: 'SOL-002',
-        callsign: 'SOL-002 (Ghost - Aditi)',
+        callsign: 'SOL-002 (Aditi)',
         reason: 'Compound tibia fracture. Vitals stable (HR 86, SpO2 96%). Delayed holding.',
         score: 35,
         severity: 'low',
         track: {
           ...baseTrack,
           id: 'SOL-002',
-          callsign: 'SOL-002 (Ghost - Aditi)',
+          callsign: 'SOL-002 (Aditi)',
           threatScore: 35,
           status: 'tracking',
         },
@@ -298,7 +298,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   // Medical Activity ticker
   const latestActivity = useMemo(() => {
-    return 'Medevac Dispatch: AMB-02 en route to Field Hospital Alpha with SOL-001 (Viper - Aarav) — ETA 11 min';
+    return 'Medevac Dispatch: AMB-02 en route to Field Hospital Alpha with SOL-001 (Aarav) — ETA 11 min';
   }, []);
 
   // Top-Left Metrics Panel (Medical Telemetry for COP Map)

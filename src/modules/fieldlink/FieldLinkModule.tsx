@@ -55,6 +55,7 @@ export const FieldLinkModule: React.FC<FieldLinkModuleProps> = ({
   const [selectedLocationIdx, setSelectedLocationIdx] = useState(0);
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successToast, setSuccessToast] = useState<{ show: boolean; title: string; id: string } | null>(null);
   const [activeTab, setActiveTab] = useState<'outbox' | 'incidents' | 'channel'>('outbox');
   const [currentNode, setCurrentNode] = useState<MeshNodeId>(() => meshService.getCurrentNode());
   const [linkQualities, setLinkQualities] = useState<NodeLinkQuality>(() => meshService.getLinkQualities());
@@ -158,6 +159,10 @@ export const FieldLinkModule: React.FC<FieldLinkModuleProps> = ({
 
       await api.createIncident(newReport);
       await onRefreshIncidents();
+      setSuccessToast({ show: true, title: newReport.title, id: newReport.id });
+      setTimeout(() => {
+        setSuccessToast(null);
+      }, 4000);
       setTitle('');
       setNotes('');
     } catch (err: any) {
@@ -353,30 +358,80 @@ export const FieldLinkModule: React.FC<FieldLinkModuleProps> = ({
         </div>
 
         <div>
-          <label style={{ fontSize: '0.72rem', color: 'var(--color-ink-2)', display: 'block', marginBottom: '3px' }}>
+          <label style={{ fontSize: '0.72rem', color: 'var(--color-ink-2)', display: 'block', marginBottom: '4px' }}>
             Priority
           </label>
-          <div style={{ display: 'flex', border: '1px solid var(--color-edge)', borderRadius: 'var(--radius-sm)', overflow: 'hidden' }}>
-            {(['low', 'high', 'critical'] as PriorityLevel[]).map((p) => (
-              <button
-                key={p}
-                type="button"
-                onClick={() => setPriority(p)}
-                style={{
-                  flex: 1,
-                  background: priority === p ? 'var(--color-strip)' : 'transparent',
-                  color: priority === p ? '#FFFFFF' : 'var(--color-ink)',
-                  border: 'none',
-                  padding: '4px',
-                  fontSize: '0.72rem',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  textTransform: 'capitalize',
-                }}
-              >
-                {p}
-              </button>
-            ))}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '6px',
+            }}
+          >
+            {(['low', 'high', 'critical'] as PriorityLevel[]).map((p) => {
+              const isSelected = priority === p;
+              const config =
+                p === 'low'
+                  ? {
+                      bg: 'rgba(88, 129, 87, 0.45)',
+                      text: '#9de89c',
+                      border: '#588157',
+                      shadow: '0 0 10px rgba(88, 129, 87, 0.5)',
+                      dot: '#588157',
+                    }
+                  : p === 'high'
+                  ? {
+                      bg: 'rgba(212, 163, 115, 0.45)',
+                      text: '#ffd099',
+                      border: '#d4a373',
+                      shadow: '0 0 10px rgba(212, 163, 115, 0.5)',
+                      dot: '#d4a373',
+                    }
+                  : {
+                      bg: 'rgba(200, 90, 83, 0.5)',
+                      text: '#ff9c96',
+                      border: '#c85a53',
+                      shadow: '0 0 10px rgba(200, 90, 83, 0.6)',
+                      dot: '#c85a53',
+                    };
+
+              return (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => setPriority(p)}
+                  style={{
+                    background: isSelected ? config.bg : 'rgba(22, 27, 24, 0.85)',
+                    color: isSelected ? config.text : 'var(--color-ink-2)',
+                    border: isSelected ? `1.5px solid ${config.border}` : '1px solid var(--color-edge)',
+                    boxShadow: isSelected ? config.shadow : 'none',
+                    borderRadius: 'var(--radius-sm, 4px)',
+                    padding: '5px 4px',
+                    fontSize: '0.72rem',
+                    fontWeight: isSelected ? 800 : 600,
+                    cursor: 'pointer',
+                    textTransform: 'capitalize',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '5px',
+                    transition: 'all 0.15s ease-in-out',
+                  }}
+                >
+                  <span
+                    style={{
+                      width: '6px',
+                      height: '6px',
+                      borderRadius: '50%',
+                      background: isSelected ? config.dot : 'rgba(115, 138, 101, 0.3)',
+                      boxShadow: isSelected ? `0 0 6px ${config.dot}` : 'none',
+                      flexShrink: 0,
+                    }}
+                  />
+                  <span>{p}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -412,6 +467,27 @@ export const FieldLinkModule: React.FC<FieldLinkModuleProps> = ({
           />
         </div>
 
+        {successToast?.show && (
+          <div
+            style={{
+              padding: '6px 10px',
+              borderRadius: '4px',
+              background: 'rgba(88, 129, 87, 0.25)',
+              border: '1px solid #588157',
+              color: '#9de89c',
+              fontSize: '0.72rem',
+              fontWeight: 700,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontFamily: 'var(--font-mono)',
+            }}
+          >
+            <CheckCircle size={13} color="#588157" />
+            <span>Submitted successfully!</span>
+          </div>
+        )}
+
         <button
           type="submit"
           className="btn btn-primary"
@@ -443,14 +519,80 @@ export const FieldLinkModule: React.FC<FieldLinkModuleProps> = ({
         minHeight: 0,
       }}
     >
+      {/* Floating Tactical Notification Popup for Submitted Successfully */}
+      {successToast?.show && (
+        <div
+          role="alert"
+          style={{
+            position: 'absolute',
+            top: '20px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 10000,
+            background: 'rgba(18, 24, 20, 0.96)',
+            border: '1px solid #588157',
+            borderRadius: '6px',
+            padding: '12px 22px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.8), 0 0 24px rgba(88, 129, 87, 0.45)',
+            backdropFilter: 'blur(10px)',
+            color: '#e9ece9',
+            pointerEvents: 'auto',
+          }}
+        >
+          <div
+            style={{
+              width: '28px',
+              height: '28px',
+              borderRadius: '50%',
+              background: 'rgba(88, 129, 87, 0.25)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: '1px solid #588157',
+              flexShrink: 0,
+            }}
+          >
+            <CheckCircle size={17} color="#588157" />
+          </div>
+          <div>
+            <div
+              style={{
+                fontWeight: 800,
+                fontSize: '0.86rem',
+                color: '#588157',
+                fontFamily: 'var(--font-heading)',
+                letterSpacing: '0.02em',
+              }}
+            >
+              Report Submitted Successfully
+            </div>
+            <div
+              style={{
+                fontSize: '0.74rem',
+                color: '#94a192',
+                fontFamily: 'var(--font-mono)',
+                marginTop: '2px',
+              }}
+            >
+              Incident "{successToast.title}" saved to outbox queue
+            </div>
+          </div>
+        </div>
+      )}
+
       <div style={{ display: 'flex', flex: 1, minHeight: 0, minWidth: 0, position: 'relative' }}>
         {/* Left / Center Map Area */}
         <div style={{ flex: 1, position: 'relative', minWidth: 0, minHeight: 0, height: '100%' }}>
           <TacticalMap
             incidents={incidents}
             height="100%"
-            showRadarSweep={false}
-            initialMode="chart"
+            showRadarSweep={true}
+            initialMode="radar"
+            activeMode="radar"
+            hideModeSwitcher={true}
             topLeftContent={topLeftMetrics}
             bottomLeftContent={bottomLeftReport}
           />

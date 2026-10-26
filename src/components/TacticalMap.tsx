@@ -37,6 +37,7 @@ export interface TacticalMapProps {
   topRightContent?: React.ReactNode;
   activeMode?: 'chart' | 'radar' | 'thermal';
   onModeChange?: (mode: 'chart' | 'radar' | 'thermal') => void;
+  hideModeSwitcher?: boolean;
 }
 
 interface BoundingBox2D {
@@ -70,6 +71,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
   topRightContent,
   activeMode,
   onModeChange,
+  hideModeSwitcher = false,
 }) => {
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -386,41 +388,43 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
           {topLeftContent}
 
           {/* Mode Switcher Segmented Control */}
-          <div
-            className="segmented-switch"
-            style={{
-              pointerEvents: 'auto',
-              flexShrink: 0,
-            }}
-            onClick={(e) => e.stopPropagation()}
-            role="group"
-            aria-label="Map Display Modes"
-          >
-            <button
-              type="button"
-              className={`segmented-switch-btn ${radarMode === 'topo' ? 'active' : ''}`}
-              onClick={() => handleSetMode('topo')}
-              title="Cartographic Terrain Chart"
+          {!hideModeSwitcher && (
+            <div
+              className="segmented-switch"
+              style={{
+                pointerEvents: 'auto',
+                flexShrink: 0,
+              }}
+              onClick={(e) => e.stopPropagation()}
+              role="group"
+              aria-label="Map Display Modes"
             >
-              CHART
-            </button>
-            <button
-              type="button"
-              className={`segmented-switch-btn ${radarMode === 'ppi' ? 'active' : ''}`}
-              onClick={() => handleSetMode('ppi')}
-              title="Plan Position Indicator (PPI) Radar Scope"
-            >
-              RADAR
-            </button>
-            <button
-              type="button"
-              className={`segmented-switch-btn ${radarMode === 'flir' ? 'active' : ''}`}
-              onClick={() => handleSetMode('flir')}
-              title="Forward Looking Infrared (FLIR) Thermal Sensor"
-            >
-              THERMAL
-            </button>
-          </div>
+              <button
+                type="button"
+                className={`segmented-switch-btn ${radarMode === 'topo' ? 'active' : ''}`}
+                onClick={() => handleSetMode('topo')}
+                title="Cartographic Terrain Chart"
+              >
+                CHART
+              </button>
+              <button
+                type="button"
+                className={`segmented-switch-btn ${radarMode === 'ppi' ? 'active' : ''}`}
+                onClick={() => handleSetMode('ppi')}
+                title="Plan Position Indicator (PPI) Radar Scope"
+              >
+                RADAR
+              </button>
+              <button
+                type="button"
+                className={`segmented-switch-btn ${radarMode === 'flir' ? 'active' : ''}`}
+                onClick={() => handleSetMode('flir')}
+                title="Forward Looking Infrared (FLIR) Thermal Sensor"
+              >
+                THERMAL
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Top-Right Region */}
