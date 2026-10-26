@@ -1,6 +1,6 @@
 # Authentication entry and branch integration
 
-Integrated main `17f3a3fc53d06a82b42adcd65e55c117bf58521c` with the authentication and logic work on `fix/logic` (`b284e8d`). Main's medical dashboard, nested MediRoute screens, Soldier Vitals, dark theme, and dashboard styles are retained.
+Integrated main `17f3a3fc53d06a82b42adcd65e55c117bf58521c` with the authentication and logic work on `fix/logic` (`b284e8d`). Also integrated main `6f9b7a62e7ed1b6d302c93f42d6afdfabfb4abd0` after it advanced during verification; its removal of SkyWatch and GeoIntel from the navigation and shell is retained. Unsupported module URLs return to the dashboard. Main's medical dashboard, nested MediRoute screens, Soldier Vitals, dark theme, and dashboard styles are retained.
 
 ## Startup
 

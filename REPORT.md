@@ -1,5 +1,5 @@
 # SENTINEL Project Report & System Architecture Ledger
-*Automated Operational & Technical Dossier — Generated 2026-10-26T10:27:55.716Z*
+*Automated Operational & Technical Dossier — Generated 2026-10-26T10:48:22.050Z*
 
 ---
 
@@ -18,12 +18,12 @@ The platform provides resilient disaster-zone situational awareness for military
 | Metric | Active Repository Value |
 | :--- | :--- |
 | **Active Branch** | `main` |
-| **Commit SHA** | `86fd04c910bf2fdd8a93276a5cd2322b8b6ceb5f` (`86fd04c`) |
-| **Last Commit Date** | `2026-10-26 15:57:08 +0530` |
-| **Author** | `Falcon-20199 <rizwan1612010@gmai.com>` |
+| **Commit SHA** | `2cddbddc3be211eedb0da914d7011e85ac043eba` (`2cddbdd`) |
+| **Last Commit Date** | `2026-10-26 16:17:54 +0530` |
+| **Author** | `Vineet <vineet00955@gmail.com>` |
 | **Remote URL** | `https://github.com/nk6629716-afk/fallingsun` |
 | **Working Tree Status** | `Clean working directory (all files committed)` |
-| **Latest Message** | `feat: remove expectant category and synchronize soldier information and vitals across all modules` |
+| **Latest Message** | `feat(navigation): remove GeoIntel and SkyWatch pages from website navigation and shell` |
 
 ---
 

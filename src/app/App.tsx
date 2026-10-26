@@ -27,8 +27,6 @@ import { Sidebar } from './Sidebar';
 import { CommandHeader } from './CommandHeader';
 import { Dashboard } from '../dashboard/Dashboard';
 import { FieldLinkModule } from '../modules/fieldlink/FieldLinkModule';
-import { SkyWatchModule } from '../modules/skywatch/SkyWatchModule';
-import { GeoIntelModule } from '../modules/geointel/GeoIntelModule';
 import { SoldierVitalsModule } from '../modules/vitals/SoldierVitalsModule';
 import { MediRouteSubTab } from '../modules/mediroute/medirouteTypes';
 import { MediRouteModule } from '../modules/mediroute/MediRouteModule';
@@ -38,11 +36,11 @@ import { UserProfile } from '@shared/types';
 import { realtimeService, RealtimeState } from '../services/api/realtimeService';
 import { syncManager } from '../services/sync/syncManager';
 import { selectPendingOutbox, selectOpenAlerts } from '../selectors';
-import { Layers, Radio, Crosshair, Compass, HeartPulse, Activity, Shield } from 'lucide-react';
+import { Layers, Radio, HeartPulse, Activity, Shield } from 'lucide-react';
 
 export type ModuleId = 'dashboard' | 'fieldlink' | 'skywatch' | 'geointel' | 'mediroute' | 'vitals' | 'vitalwatch' | 'auth';
 
-export const VALID_MODULES: readonly ModuleId[] = ['dashboard', 'fieldlink', 'skywatch', 'geointel', 'mediroute', 'vitals', 'vitalwatch'] as const;
+export const VALID_MODULES: readonly ModuleId[] = ['dashboard', 'fieldlink', 'mediroute', 'vitals', 'vitalwatch'] as const;
 
 export const DEFAULT_INITIAL_SUMMARY: DashboardSummary = {
   systemStatus: 'nominal',
@@ -90,6 +88,7 @@ export const App: React.FC<{ currentUser: UserProfile; onSignOut: () => void }> 
   });
 
   const handleNavigate = useCallback((mod: ModuleId) => {
+    if (!VALID_MODULES.includes(mod)) mod = 'dashboard';
     setActiveModuleState(mod);
     if (typeof window !== 'undefined') {
       const targetHash = mod === 'mediroute' && medirouteSubTab !== 'overview' ? `#mediroute/${medirouteSubTab}` : `#${mod}`;
@@ -578,6 +577,8 @@ export const App: React.FC<{ currentUser: UserProfile; onSignOut: () => void }> 
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={handleToggleSidebarCollapse}
         currentUser={currentUser}
+        medirouteSubTab={medirouteSubTab}
+        onSelectMediRouteSubTab={handleNavigateMediRouteSubTab}
         onSignOut={handleSignOut}
         onOpenAddPersonnel={() => setIsAddPersonnelOpen(true)}
       />
@@ -645,25 +646,6 @@ export const App: React.FC<{ currentUser: UserProfile; onSignOut: () => void }> 
               />
             )}
 
-            {activeModule === 'skywatch' && (
-              <SkyWatchModule
-                tracks={tracks}
-                alerts={alerts}
-                zones={zones}
-                onRefreshAlerts={refreshAllData}
-                onStepSimulation={handleStepSimulation}
-                onToggleSimulationPause={handleToggleSimPause}
-                isSimPaused={isSimPaused}
-              />
-            )}
-
-            {activeModule === 'geointel' && (
-              <GeoIntelModule
-                observations={observations}
-                onRefreshObservations={refreshAllData}
-              />
-            )}
-
             {activeModule === 'mediroute' && (
               <MediRouteModule
                 initialSubTab={medirouteSubTab}
@@ -717,38 +699,6 @@ export const App: React.FC<{ currentUser: UserProfile; onSignOut: () => void }> 
               }}
             />
           )}
-        </button>
-
-        <button
-          type="button"
-          className={`mobile-dock-item ${activeModule === 'skywatch' ? 'active' : ''}`}
-          onClick={() => handleNavigate('skywatch')}
-          style={{ position: 'relative' }}
-        >
-          <Crosshair size={18} />
-          <span>SkyWatch</span>
-          {unackAlertsCount > 0 && (
-            <span
-              style={{
-                position: 'absolute',
-                top: '4px',
-                right: '18px',
-                width: '7px',
-                height: '7px',
-                borderRadius: '50%',
-                background: 'var(--color-crit)',
-              }}
-            />
-          )}
-        </button>
-
-        <button
-          type="button"
-          className={`mobile-dock-item ${activeModule === 'geointel' ? 'active' : ''}`}
-          onClick={() => handleNavigate('geointel')}
-        >
-          <Compass size={18} />
-          <span>GeoIntel</span>
         </button>
 
         <button
