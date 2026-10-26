@@ -1,5 +1,5 @@
 # SENTINEL Project Report & System Architecture Ledger
-*Automated Operational & Technical Dossier — Generated 2026-10-26T11:20:51.616Z*
+*Automated Operational & Technical Dossier — Generated 2026-10-26T11:26:32.557Z*
 
 ---
 
@@ -18,12 +18,12 @@ The platform provides resilient disaster-zone situational awareness for military
 | Metric | Active Repository Value |
 | :--- | :--- |
 | **Active Branch** | `main` |
-| **Commit SHA** | `db8dabc13e915e8e25411bb748fb9108c98d3f28` (`db8dabc`) |
-| **Last Commit Date** | `2026-10-26 16:50:11 +0530` |
-| **Author** | `Vineet <vineet00955@gmail.com>` |
+| **Commit SHA** | `bcdd72907bbd3f7ecea5c2dba752d705d559d341` (`bcdd729`) |
+| **Last Commit Date** | `2026-10-26 16:56:03 +0530` |
+| **Author** | `Falcon-20199 <rizwan1612010@gmai.com>` |
 | **Remote URL** | `https://github.com/nk6629716-afk/fallingsun` |
 | **Working Tree Status** | `Clean working directory (all files committed)` |
-| **Latest Message** | `docs: update README header` |
+| **Latest Message** | `feat(fieldlink): hide mode buttons, set radar mode default, add priority selection effects and success popup toast` |
 
 ---
 
