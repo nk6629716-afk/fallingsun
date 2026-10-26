@@ -1,4 +1,4 @@
-# SENTINEL — MediRoute
+SENTINEL — MediRoute
 
 SENTINEL is an emergency medical logistics and triage coordination platform built for natural disasters, combat zones, and mass-casualty incidents. When disasters strike, cellular networks fail, critical roads and bridges become blocked, and receiving hospitals quickly get overwhelmed with injured patients. Our system connects medics on the ground with regional command centers in real time, giving responders an automated way to prioritize casualties using standard triage protocols, monitor open surgical beds across nearby facilities, and immediately discover safe evacuation paths.
 

@@ -144,7 +144,7 @@ export const INITIAL_EXTENDED_CASUALTIES: ExtendedCasualtyRecord[] = [
   {
     id: 'SOL-001',
     patientCode: 'SOL-001',
-    fictionalName: 'SOL-001 (Viper - Aarav)',
+    fictionalName: 'SOL-001 (Aarav)',
     age: 28,
     gender: 'M',
     location: { name: 'CCP Delta', lat: 34.072, lng: -118.225 },
@@ -225,7 +225,7 @@ export const INITIAL_EXTENDED_CASUALTIES: ExtendedCasualtyRecord[] = [
   {
     id: 'SOL-002',
     patientCode: 'SOL-002',
-    fictionalName: 'SOL-002 (Ghost - Aditi)',
+    fictionalName: 'SOL-002 (Aditi)',
     age: 26,
     gender: 'F',
     location: { name: 'CCP Delta', lat: 34.072, lng: -118.225 },
@@ -266,7 +266,7 @@ export const INITIAL_EXTENDED_CASUALTIES: ExtendedCasualtyRecord[] = [
   {
     id: 'SOL-003',
     patientCode: 'SOL-003',
-    fictionalName: 'SOL-003 (Echo - Dev)',
+    fictionalName: 'SOL-003 (Dev)',
     age: 31,
     gender: 'M',
     location: { name: 'Forward Aid Station Bravo', lat: 34.065, lng: -118.238 },
@@ -306,7 +306,7 @@ export const INITIAL_EXTENDED_CASUALTIES: ExtendedCasualtyRecord[] = [
   {
     id: 'SOL-004',
     patientCode: 'SOL-004',
-    fictionalName: 'SOL-004 (Titan - Diya)',
+    fictionalName: 'SOL-004 (Diya)',
     age: 29,
     gender: 'F',
     location: { name: 'River Road Crossing', lat: 34.062, lng: -118.235 },
@@ -368,7 +368,7 @@ export const INITIAL_EXTENDED_CASUALTIES: ExtendedCasualtyRecord[] = [
   {
     id: 'SOL-005',
     patientCode: 'SOL-005',
-    fictionalName: 'SOL-005 (Sentry - Meera)',
+    fictionalName: 'SOL-005 (Meera)',
     age: 34,
     gender: 'F',
     location: { name: 'Interstate Jct 101/110', lat: 34.056, lng: -118.248 },
@@ -407,7 +407,7 @@ export const INITIAL_EXTENDED_CASUALTIES: ExtendedCasualtyRecord[] = [
   {
     id: 'SOL-006',
     patientCode: 'SOL-006',
-    fictionalName: 'SOL-006 (Falcon - Myra)',
+    fictionalName: 'SOL-006 (Myra)',
     age: 25,
     gender: 'F',
     location: { name: 'Forward Post Alpha', lat: 34.058, lng: -118.242 },
@@ -445,7 +445,7 @@ export const INITIAL_EXTENDED_CASUALTIES: ExtendedCasualtyRecord[] = [
   {
     id: 'SOL-007',
     patientCode: 'SOL-007',
-    fictionalName: 'SOL-007 (Hawk - Neil)',
+    fictionalName: 'SOL-007 (Neil)',
     age: 30,
     gender: 'M',
     location: { name: 'Aid Station Bravo', lat: 34.065, lng: -118.238 },
@@ -496,7 +496,7 @@ export const INITIAL_EXTENDED_CASUALTIES: ExtendedCasualtyRecord[] = [
   {
     id: 'SOL-008',
     patientCode: 'SOL-008',
-    fictionalName: 'SOL-008 (Saber - Pooja)',
+    fictionalName: 'SOL-008 (Pooja)',
     age: 27,
     gender: 'F',
     location: { name: 'Aid Station Bravo', lat: 34.065, lng: -118.238 },
@@ -534,7 +534,7 @@ export const INITIAL_EXTENDED_CASUALTIES: ExtendedCasualtyRecord[] = [
   {
     id: 'SOL-009',
     patientCode: 'SOL-009',
-    fictionalName: 'SOL-009 (Phantom - Priya)',
+    fictionalName: 'SOL-009 (Priya)',
     age: 24,
     gender: 'F',
     location: { name: 'River Road Crossing', lat: 34.062, lng: -118.235 },
@@ -572,7 +572,7 @@ export const INITIAL_EXTENDED_CASUALTIES: ExtendedCasualtyRecord[] = [
   {
     id: 'SOL-010',
     patientCode: 'SOL-010',
-    fictionalName: 'SOL-010 (Striker - Rahul)',
+    fictionalName: 'SOL-010 (Rahul)',
     age: 33,
     gender: 'M',
     location: { name: 'Interstate Jct 101/110', lat: 34.056, lng: -118.248 },
@@ -631,7 +631,7 @@ export const INITIAL_MEDICAL_ACTIVITIES: MedicalActivityItem[] = [
     timestamp: new Date(Date.now() - 3 * 60000).toISOString(),
     type: 'vital_anomaly',
     severity: 'critical',
-    title: 'Critical Anomaly Detected on SOL-001 (Viper - Aarav)',
+    title: 'Critical Anomaly Detected on SOL-001 (Aarav)',
     description: 'SpO2 dropped to 88% and RR increased to 34/min. Triage level escalated to Immediate (Red).',
     targetTab: 'triage',
     targetId: 'SOL-001',
@@ -642,7 +642,7 @@ export const INITIAL_MEDICAL_ACTIVITIES: MedicalActivityItem[] = [
     type: 'dispatch',
     severity: 'info',
     title: 'Ambulance AMB-02 Dispatched',
-    description: 'Assigned to evacuate SOL-001 (Viper - Aarav) from CCP Delta to Sector Field Hospital Alpha. Rerouted via North Detour.',
+    description: 'Assigned to evacuate SOL-001 (Aarav) from CCP Delta to Sector Field Hospital Alpha. Rerouted via North Detour.',
     targetTab: 'dispatch',
     targetId: 'TASK-EVAC-01',
   },
@@ -661,7 +661,7 @@ export const INITIAL_MEDICAL_ACTIVITIES: MedicalActivityItem[] = [
     timestamp: new Date(Date.now() - 35 * 60000).toISOString(),
     type: 'triage_update',
     severity: 'info',
-    title: 'Triage Confirmed for SOL-002 (Ghost - Aditi)',
+    title: 'Triage Confirmed for SOL-002 (Aditi)',
     description: 'Operator confirmed Delayed (Yellow) classification for compound limb fracture.',
     targetTab: 'triage',
     targetId: 'SOL-002',

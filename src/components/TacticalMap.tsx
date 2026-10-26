@@ -39,6 +39,7 @@ export interface TacticalMapProps {
   topRightContent?: React.ReactNode;
   activeMode?: 'chart' | 'radar' | 'thermal';
   onModeChange?: (mode: 'chart' | 'radar' | 'thermal') => void;
+  hideModeSwitcher?: boolean;
 }
 
 interface BoundingBox2D {
@@ -72,6 +73,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
   topRightContent,
   activeMode,
   onModeChange,
+  hideModeSwitcher = false,
 }) => {
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -393,75 +395,77 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({
           {topLeftContent}
 
           {/* Mode Switcher Segmented Control */}
-          <div
-            style={{
-              display: 'inline-flex',
-              border: 'var(--border-width, 1.2px) solid var(--color-edge)',
-              boxShadow: 'var(--shadow-flat-sm)',
-              background: 'var(--color-sheet)',
-              borderRadius: 'var(--radius-sm)',
-              overflow: 'hidden',
-              pointerEvents: 'auto',
-              flexShrink: 0,
-            }}
-            onClick={(e) => e.stopPropagation()}
-            role="group"
-            aria-label="Map Display Modes"
-          >
-            <button
-              type="button"
-              onClick={() => handleSetMode('topo')}
+          {!hideModeSwitcher && (
+            <div
               style={{
-                background: radarMode === 'topo' ? 'var(--color-strip)' : 'transparent',
-                color: radarMode === 'topo' ? '#FFFFFF' : 'var(--text-primary)',
-                border: 'none',
-                padding: '6px 14px',
-                fontSize: '0.78rem',
-                fontFamily: 'var(--font-heading)',
-                fontWeight: 700,
-                cursor: 'pointer',
+                display: 'inline-flex',
+                border: 'var(--border-width, 1.2px) solid var(--color-edge)',
+                boxShadow: 'var(--shadow-flat-sm)',
+                background: 'var(--color-sheet)',
+                borderRadius: 'var(--radius-sm)',
+                overflow: 'hidden',
+                pointerEvents: 'auto',
+                flexShrink: 0,
               }}
-              title="Cartographic Terrain Chart"
+              onClick={(e) => e.stopPropagation()}
+              role="group"
+              aria-label="Map Display Modes"
             >
-              Chart
-            </button>
-            <button
-              type="button"
-              onClick={() => handleSetMode('ppi')}
-              style={{
-                background: radarMode === 'ppi' ? 'var(--color-strip)' : 'transparent',
-                color: radarMode === 'ppi' ? '#FFFFFF' : 'var(--text-primary)',
-                border: 'none',
-                padding: '6px 14px',
-                fontSize: '0.78rem',
-                fontFamily: 'var(--font-heading)',
-                fontWeight: 700,
-                cursor: 'pointer',
-                borderLeft: '1px solid var(--color-edge)',
-                borderRight: '1px solid var(--color-edge)',
-              }}
-              title="Plan Position Indicator (PPI) Radar Scope"
-            >
-              Radar
-            </button>
-            <button
-              type="button"
-              onClick={() => handleSetMode('flir')}
-              style={{
-                background: radarMode === 'flir' ? 'var(--color-strip)' : 'transparent',
-                color: radarMode === 'flir' ? '#FFFFFF' : 'var(--text-primary)',
-                border: 'none',
-                padding: '6px 14px',
-                fontSize: '0.78rem',
-                fontFamily: 'var(--font-heading)',
-                fontWeight: 700,
-                cursor: 'pointer',
-              }}
-              title="Forward Looking Infrared (FLIR) Thermal Sensor"
-            >
-              Thermal
-            </button>
-          </div>
+              <button
+                type="button"
+                onClick={() => handleSetMode('topo')}
+                style={{
+                  background: radarMode === 'topo' ? 'var(--color-strip)' : 'transparent',
+                  color: radarMode === 'topo' ? '#FFFFFF' : 'var(--text-primary)',
+                  border: 'none',
+                  padding: '6px 14px',
+                  fontSize: '0.78rem',
+                  fontFamily: 'var(--font-heading)',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+                title="Cartographic Terrain Chart"
+              >
+                Chart
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSetMode('ppi')}
+                style={{
+                  background: radarMode === 'ppi' ? 'var(--color-strip)' : 'transparent',
+                  color: radarMode === 'ppi' ? '#FFFFFF' : 'var(--text-primary)',
+                  border: 'none',
+                  padding: '6px 14px',
+                  fontSize: '0.78rem',
+                  fontFamily: 'var(--font-heading)',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  borderLeft: '1px solid var(--color-edge)',
+                  borderRight: '1px solid var(--color-edge)',
+                }}
+                title="Plan Position Indicator (PPI) Radar Scope"
+              >
+                Radar
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSetMode('flir')}
+                style={{
+                  background: radarMode === 'flir' ? 'var(--color-strip)' : 'transparent',
+                  color: radarMode === 'flir' ? '#FFFFFF' : 'var(--text-primary)',
+                  border: 'none',
+                  padding: '6px 14px',
+                  fontSize: '0.78rem',
+                  fontFamily: 'var(--font-heading)',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+                title="Forward Looking Infrared (FLIR) Thermal Sensor"
+              >
+                Thermal
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Top-Right Region */}

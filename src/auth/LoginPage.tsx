@@ -98,6 +98,55 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
           </p>
         </div>
 
+        {/* Demo Account Notice Banner */}
+        <div
+          style={{
+            padding: '10px 14px',
+            borderRadius: '6px',
+            background: 'rgba(212, 163, 115, 0.12)',
+            border: '1px solid rgba(212, 163, 115, 0.35)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#d4a373', letterSpacing: '0.04em' }}>
+              DEMO ACCOUNT — NOT FOR OPERATIONAL USE
+            </span>
+            <span style={{ fontSize: '0.62rem', padding: '1px 6px', borderRadius: '3px', background: 'rgba(212, 163, 115, 0.25)', color: '#d4a373', fontWeight: 700 }}>
+              TESTING ONLY
+            </span>
+          </div>
+          <div style={{ fontSize: '0.7rem', color: '#94a192', lineHeight: 1.3 }}>
+            Use the provisioned Demo Official Account (Role: Operations Officer) to test the authenticated login flow:
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setEmail('demo.official@sentinel-demo.local');
+              setPassword('Sentinel#DemoOfficial2026!Local');
+            }}
+            style={{
+              padding: '6px 10px',
+              background: '#161c18',
+              border: '1px solid rgba(115, 138, 101, 0.35)',
+              borderRadius: '4px',
+              color: '#738a65',
+              fontSize: '0.72rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              fontFamily: 'inherit',
+            }}
+          >
+            <span>Fill Demo Official</span>
+            <span style={{ fontSize: '0.65rem', color: '#667564' }}>demo.official@sentinel-demo.local</span>
+          </button>
+        </div>
+
         {/* Error message */}
         {errorMessage && (
           <div
@@ -233,7 +282,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
           <div style={{ fontSize: '0.68rem', color: '#667564', textAlign: 'center' }}>
             LOCAL AIR-GAP DEMO CLEARANCE (STANDALONE)
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
             <button
               type="button"
               onClick={() => handleDemoLogin('administrator')}
@@ -252,7 +301,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
               }}
             >
               <UserCheck size={12} color="#738a65" />
-              <span>Admin Demo</span>
+              <span>Admin</span>
             </button>
             <button
               type="button"
@@ -272,7 +321,30 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
               }}
             >
               <UserCheck size={12} color="#588157" />
-              <span>Medical Demo</span>
+              <span>Medical</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setEmail('demo.official@sentinel-demo.local');
+                setPassword('Sentinel#DemoOfficial2026!Local');
+              }}
+              style={{
+                padding: '6px 8px',
+                background: 'rgba(212, 163, 115, 0.1)',
+                border: '1px solid rgba(212, 163, 115, 0.3)',
+                borderRadius: '4px',
+                color: '#e9ece9',
+                fontSize: '0.7rem',
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+              }}
+            >
+              <UserCheck size={12} color="#d4a373" />
+              <span>Official</span>
             </button>
           </div>
         </div>

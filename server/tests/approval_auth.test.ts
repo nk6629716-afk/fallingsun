@@ -156,3 +156,52 @@ test('Activity intake and Gemini risk review contract', async () => {
   assert.ok(Array.isArray(reviewRes.body.data.limitations));
   assert.ok(reviewRes.body.data.limitations.some((l: string) => l.toLowerCase().includes('advisory')));
 });
+
+test('Demo Official Account authentication and authorization contract', async () => {
+  // 1. Rejects invalid password
+  const failRes = await request(app)
+    .post('/api/auth/login')
+    .send({
+      email: 'demo.official@sentinel-demo.local',
+      password: 'WrongPassword123!',
+    });
+
+  assert.strictEqual(failRes.status, 401);
+  assert.strictEqual(failRes.body.success, false);
+  assert.strictEqual(failRes.body.error.code, 'INVALID_CREDENTIALS');
+
+  // 2. Accepts valid demo credentials
+  const loginRes = await request(app)
+    .post('/api/auth/login')
+    .send({
+      email: 'demo.official@sentinel-demo.local',
+      password: 'Sentinel#DemoOfficial2026!Local',
+    });
+
+  assert.strictEqual(loginRes.status, 200);
+  assert.strictEqual(loginRes.body.success, true);
+  assert.strictEqual(loginRes.body.data.user.email, 'demo.official@sentinel-demo.local');
+  assert.strictEqual(loginRes.body.data.user.role, 'operations_officer');
+  assert.strictEqual(loginRes.body.data.user.approvalStatus, 'approved');
+  assert.ok(loginRes.body.data.notice.includes('DEMO ACCOUNT'));
+
+  const token = loginRes.body.data.token;
+
+  // 3. Permitted to access operational dashboard
+  const dashRes = await request(app)
+    .get('/api/dashboard')
+    .set('Authorization', `Bearer ${token}`)
+    .set('x-disable-test-fallback', 'true');
+
+  assert.strictEqual(dashRes.status, 200);
+  assert.strictEqual(dashRes.body.success, true);
+
+  // 4. Forbidden from administrative approval panel
+  const adminRes = await request(app)
+    .get('/api/admin/registrations')
+    .set('Authorization', `Bearer ${token}`)
+    .set('x-disable-test-fallback', 'true');
+
+  assert.strictEqual(adminRes.status, 403);
+  assert.strictEqual(adminRes.body.error.code, 'FORBIDDEN');
+});
