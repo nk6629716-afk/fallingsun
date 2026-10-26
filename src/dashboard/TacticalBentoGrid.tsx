@@ -103,10 +103,10 @@ export const TacticalBentoGrid: React.FC<TacticalBentoGridProps> = ({
 
   // Interactive Directives State (Medical Operations Protocols)
   const [tasks, setTasks] = useState<DirectiveTask[]>([
-    { id: 'm1', title: 'Verify Immediate Triage on CAS-0419 (Hemodynamic Shock)', completed: true, code: 'TRI-01', sector: 'TRAUMA-ALPHA' },
+    { id: 'm1', title: 'Verify Immediate Triage on SOL-001 (Aarav) (Hemodynamic Shock)', completed: true, code: 'TRI-01', sector: 'TRAUMA-ALPHA' },
     { id: 'm2', title: 'Route AMB-02 via Highway 9 Bypass around Bridge Span', completed: false, code: 'ROU-02', sector: 'CORRIDOR-9' },
     { id: 'm3', title: 'Stage Surgical Suite #1 at Sector Field Hospital Alpha', completed: false, code: 'SUR-03', sector: 'HOSP-ALPHA' },
-    { id: 'm4', title: 'Dispatch Air Medevac for Casualty CAS-0420 (Pneumothorax)', completed: false, code: 'EVAC-04', sector: 'AIR-MED' },
+    { id: 'm4', title: 'Dispatch Air Medevac for Casualty SOL-004 (Diya) (Hemorrhage)', completed: false, code: 'EVAC-04', sector: 'AIR-MED' },
   ]);
 
   // Hover state for Corridor Transit Times Bar Chart
@@ -1102,7 +1102,7 @@ export const TacticalBentoGrid: React.FC<TacticalBentoGridProps> = ({
                 marginBottom: '14px',
               }}
             >
-              Assigned to CAS-0419 (Immediate) · Destination: Field Hospital Alpha · ETA 11m
+              Assigned to SOL-001 (Aarav) (Immediate) · Destination: Field Hospital Alpha · ETA 11m
             </p>
 
             {/* Transport Unit Tactical HUD Box */}

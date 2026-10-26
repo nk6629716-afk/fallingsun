@@ -698,9 +698,9 @@ export interface AuthSession {
 // MODULE: SOLDIER VITALS & HEALTH MONITORING
 // -------------------------------------------------------------
 export interface SoldierProfile {
-  id: string; // e.g. 'SOL-101'
-  callsign: string; // e.g. 'Viper 1'
-  unit: string; // e.g. '1st Recon Bravo'
+  id: string; // e.g. 'SOL-001'
+  callsign: string; // e.g. 'SOL-001 (Aarav)'
+  unit: string; // e.g. '1st Recon Team (CCP Delta)'
   status: 'active' | 'in_transit' | 'standby';
 }
 

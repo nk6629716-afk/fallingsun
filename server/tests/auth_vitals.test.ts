@@ -41,7 +41,7 @@ test('POST /api/vitals rejects read_only_viewer with 403 FORBIDDEN', async () =>
     .post('/api/vitals')
     .set('Authorization', 'Bearer dev-viewer-token')
     .send({
-      soldierId: 'SOL-101',
+      soldierId: 'SOL-001',
       heartRateBpm: 80,
     });
 
@@ -55,7 +55,7 @@ test('POST /api/vitals creates time-stamped record for medical_officer', async (
     .post('/api/vitals')
     .set('Authorization', 'Bearer dev-medical-token')
     .send({
-      soldierId: 'SOL-101',
+      soldierId: 'SOL-001',
       heartRateBpm: 76,
       bloodPressureSystolic: 120,
       bloodPressureDiastolic: 80,
@@ -67,15 +67,15 @@ test('POST /api/vitals creates time-stamped record for medical_officer', async (
 
   assert.strictEqual(res.status, 201);
   assert.strictEqual(res.body.success, true);
-  assert.strictEqual(res.body.data.soldierId, 'SOL-101');
+  assert.strictEqual(res.body.data.soldierId, 'SOL-001');
   assert.strictEqual(res.body.data.heartRateBpm, 76);
   assert.ok(res.body.data.recordedBy.includes('medical_officer'));
   assert.ok(res.body.meta.disclaimer);
 
   // Verify retrieval
-  const getRes = await request(app).get('/api/vitals/SOL-101');
+  const getRes = await request(app).get('/api/vitals/SOL-001');
   assert.strictEqual(getRes.status, 200);
-  assert.strictEqual(getRes.body.data.soldier.id, 'SOL-101');
+  assert.strictEqual(getRes.body.data.soldier.id, 'SOL-001');
   assert.ok(getRes.body.data.history.length >= 1);
 });
 
